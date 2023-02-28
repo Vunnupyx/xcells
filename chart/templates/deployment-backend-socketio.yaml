@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "infinitymaps.fullname" . }}-backend-socketio
+  labels:
+    component: backend-socketio
+    {{- include "infinitymaps.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      component: backend-socketio
+      {{- include "infinitymaps.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.backend.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        component: backend-socketio
+        {{- include "infinitymaps.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.backend.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.backend.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-backend
+          securityContext:
+            {{- toYaml .Values.backend.securityContext | nindent 12 }}
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: {{ .Values.backend.config.port | quote }}
+            - name: MONGO_USERNAME
+              value: {{ .Values.mongodb.auth.username | quote }}
+            - name: MONGO_PASSWORD
+            {{- if .Values.mongodb.auth.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.mongodb.auth.existingSecret | quote }}
+                  key: mongodb-password
+            {{- else }}
+              value: {{ .Values.mongodb.auth.password }}
+            {{- end }}
+            - name: MONGO_DATABASE
+              value: {{ .Values.mongodb.auth.database | quote }}
+            - name: MONGO_HOST
+              value: {{ .Values.backend.config.mongoHost | quote }}
+            - name: MONGO_PORT
+              value: {{ .Values.backend.config.mongoPort | quote}}
+            - name: NODE_ENV
+              value:  {{ .Values.backend.config.nodeEnv | quote }}
+            {{- with .Values.backend.secretName }}
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ . | quote }}
+                  key: jwtSecret
+            {{- end }}
+            {{- range $key, $value := .Values.backend.config.env }}
+            - name: '{{ $key }}'
+              value: '{{ $value }}'
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.config.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            failureThreshold: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+      {{- with .Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

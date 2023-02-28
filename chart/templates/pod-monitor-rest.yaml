@@ -1,0 +1,18 @@
+{{- if .Values.backend.metrics.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "infinitymaps.fullname" . }}-rest-pod-monitor
+  labels:
+    component: backend-rest
+    {{- include "infinitymaps.labels" . | nindent 4 }}
+spec:
+  podMetricsEndpoints:
+    - port: http
+      interval: {{ .Values.backend.metrics.interval }}
+      path: /metrics
+  selector:
+    matchLabels:
+      component: backend-rest
+      {{- include "infinitymaps.selectorLabels" . | nindent 6 }}
+{{- end -}}

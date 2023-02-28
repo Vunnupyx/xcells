@@ -1,0 +1,14 @@
+.engineTextField[contenteditable=true]:active,
+.engineTextField[contenteditable=true]:focus {
+  border: 0 solid transparent;
+  outline: 0 solid transparent;
+}
+/* separate entries to allow browsers to ignore it, if the dont support it */
+.engineTextField[contenteditable=true]:focus-visible {
+  border: 0 solid transparent;
+  outline: 0 solid transparent;
+}
+.engineTextField[contenteditable=true]:-moz-focusring {
+  border: 0 solid transparent;
+  outline: 0 solid transparent;
+}

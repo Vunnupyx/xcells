@@ -1,0 +1,17 @@
+version: "2"
+services:
+
+  node:
+    image: node:12
+    environment:
+      MONGO_HOST: mongo
+      DEBUG: ""
+    volumes:
+      - ../../:/test
+    command:
+      - "sh"
+      - "-c"
+      - "while true ; do sleep 3600 ; done"
+
+  mongo:
+    image: mongo

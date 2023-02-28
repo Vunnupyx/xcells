@@ -1,0 +1,72 @@
+{{- if .Values.backup.enabled -}}
+{{- $dateFormat := .Values.backup.dateFormat -}}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ include "infinitymaps.fullname" . }}-backup
+  labels:
+    {{- include "infinitymaps.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          {{- with .Values.backup.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+          - name: backup
+            image: "{{ $.Values.backup.image.repository }}:{{ $.Values.backup.image.tag }}"
+            args:
+            - /bin/bash
+            - -o
+            - pipefail
+            - -ce
+            - (restic stats || restic init) &&
+                mongodump
+                --verbose
+                --archive
+                --host={{ .Values.backend.config.mongoHost | quote }}
+                --port={{ .Values.backend.config.mongoPort | quote }}
+                --db={{ .Values.mongodb.auth.database | quote }}
+                --username={{ .Values.mongodb.auth.username | quote }}
+                --password="$MONGO_PASSWORD" |
+                zstd -{{ .Values.backup.compressionLevel }} |
+                restic backup --stdin --stdin-filename mongodb-backup-archive.zst &&
+                restic prune
+            env:
+              - name: MONGO_PASSWORD
+                {{- if .Values.mongodb.auth.existingSecret }}
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.mongodb.auth.existingSecret | quote }}
+                    key: mongodb-password
+                {{- else }}
+                value: {{ .Values.mongodb.auth.password }}
+                {{- end }}
+              - name: AWS_ACCESS_KEY_ID
+                value: {{ .Values.backup.s3.accessKey }}
+              - name: AWS_SECRET_ACCESS_KEY
+                {{- if .Values.backup.s3.secretName }}
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.backup.s3.secretName | quote }}
+                    key: secret-key
+                {{- else }}
+                value: {{ .Values.backup.s3.secretKey }}
+                {{- end }}
+              - name: RESTIC_REPOSITORY
+                value: "s3:{{ .Values.backup.s3.repository }}"
+              - name: RESTIC_PASSWORD
+                {{- if .Values.backup.restic.secretName }}
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.backup.restic.secretName | quote }}
+                    key: restic-password
+                {{- else }}
+                value: {{ .Values.backup.restic.password }}
+                {{- end }}
+          restartPolicy: OnFailure
+{{- end -}}

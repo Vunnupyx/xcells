@@ -1,0 +1,72 @@
+mongodb:
+  auth:
+    username: infinity-prod
+    database: infinity-prod
+    existingSecret: mongodb-password-prod
+
+backup:
+  enabled: true
+  schedule: "0 18 * * *"
+  imagePullSecrets:
+    - name: registry.awesome-it.de
+  restic:
+    secretName: "backup-secrets"
+  s3:
+    accessKey: "AHS4BPXC2P6T0A7L37Z9"
+    # contains restic-password and secret-key
+    secretName: "backup-secrets"
+    repository: "https://s3.hidrive.strato.com/backup-restic-mongodb"
+
+backend:
+  replicaCount: 6
+  importReplicaCount: 12
+  imagePullSecrets:
+    - name: registry.awesome-it.de
+  config:
+    mongoHost: mongodb-0.mongodb-headless.db-mongodb,mongodb-1.mongodb-headless.db-mongodb
+    mongoPort: 27017
+    mongoDatabase: infinity-prod
+    env:
+      USER_REFRESH_URL: https://infinitymaps.io/wp-json/api-bearer-auth/v1/tokens/refresh
+      USER_AUTH_URL: https://infinitymaps.io/wp-json/api-bearer-auth/v1/login
+      USER_LOGIN_URL: https://infinitymaps.io/sso-login
+      USER_LOGOUT_URL: https://infinitymaps.io/wp-json/api-bearer-auth/v1/logout
+      DOCS_SERVICE_URL: http://inf-prod-docs-image-creation/image
+      PDF_SERVICE_URL: http://inf-prod-pdf-image-creation/image
+      HTML_SERVICE_URL: http://inf-prod-html-image-creation/image
+      RESIZE_SERVICE_URL: http://inf-prod-resize-image-creation/image
+      POOL_MAX_IDLE_TIME: '300000'
+      POOL_MIN_SIZE: '5'
+      POOL_MAX_SIZE: '300'
+  ingress:
+    enabled: true
+    hosts:
+      - host: app.infinitymaps.io
+    tls:
+      - secretName: app.infinitymaps.io
+        hosts:
+          - app.infinitymaps.io
+    annotations:
+      kubernetes.io/ingress.class: external
+      cert-manager.io/cluster-issuer: letsencrypt
+
+  metrics:
+    enabled: true
+  secretName: wordpress-jwt-secret
+
+frontend:
+  replicaCount: 6
+  imagePullSecrets:
+    - name: registry.awesome-it.de
+  ingress:
+    enabled: true
+    hosts:
+      - host: app.infinitymaps.io
+        paths: ["/"]
+    tls:
+      - secretName: app.infinitymaps.io
+        hosts:
+          - app.infinitymaps.io
+    annotations:
+      kubernetes.io/ingress.class: external
+      cert-manager.io/cluster-issuer: letsencrypt

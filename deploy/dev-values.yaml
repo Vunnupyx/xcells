@@ -1,0 +1,63 @@
+mongodb:
+  auth:
+    username: infinity-dev
+    database: infinity-dev
+    existingSecret: mongodb-password-dev
+
+backend:
+  replicaCount: 1
+  importReplicaCount: 1
+  image:
+    tag: latest
+  imagePullSecrets:
+    - name: registry.awesome-it.de
+  config:
+    mongoHost: mongodb-0.mongodb-headless.db-mongodb,mongodb-1.mongodb-headless.db-mongodb
+    mongoPort: 27017
+    mongoDatabase: infinity-dev
+    env:
+      USER_REFRESH_URL: https://infinitymaps.io/wp-json/api-bearer-auth/v1/tokens/refresh
+      USER_AUTH_URL: https://infinitymaps.io/wp-json/api-bearer-auth/v1/login
+      USER_LOGIN_URL: https://infinitymaps.io/sso-login
+      USER_LOGOUT_URL: https://infinitymaps.io/wp-json/api-bearer-auth/v1/logout
+      DOCS_SERVICE_URL: http://inf-dev-docs-image-creation/image
+      PDF_SERVICE_URL: http://inf-dev-pdf-image-creation/image
+      HTML_SERVICE_URL: http://inf-dev-html-image-creation/image
+      RESIZE_SERVICE_URL: http://inf-dev-resize-image-creation/image
+      POOL_MAX_IDLE_TIME: '10000'
+      POOL_MIN_SIZE: '0'
+      POOL_MAX_SIZE: '50'
+  ingress:
+    enabled: true
+    hosts:
+      - host: dev.infinitymaps.io
+    tls:
+      - secretName: dev.infinitymaps.io
+        hosts:
+          - dev.infinitymaps.io
+    annotations:
+      kubernetes.io/ingress.class: external
+      cert-manager.io/cluster-issuer: letsencrypt
+  metrics:
+    enabled: true
+  secretName: wordpress-jwt-secret-prod
+
+frontend:
+  replicaCount: 6
+  image:
+    tag: latest
+  imagePullSecrets:
+    - name: registry.awesome-it.de
+  ingress:
+    enabled: true
+    hosts:
+      - host: dev.infinitymaps.io
+        paths:
+          - "/"
+    tls:
+      - secretName: dev.infinitymaps.io
+        hosts:
+          - dev.infinitymaps.io
+    annotations:
+      kubernetes.io/ingress.class: external
+      cert-manager.io/cluster-issuer: letsencrypt

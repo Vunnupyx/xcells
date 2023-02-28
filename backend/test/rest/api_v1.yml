@@ -1,0 +1,1701 @@
+# PyRestTest
+#
+# https://github.com/svanoort/pyresttest
+# https://github.com/svanoort/pyresttest/blob/master/advanced_guide.md
+#
+# Install and run:
+# $ pip install pyresttest
+# $ pyresttest http://api_host:api_port /path/to/this/api.yml
+#
+- config:
+  - testset: "Infinity Maps API V1"
+  - timeout: 100  # Increase timeout from the default 10 seconds
+  - variable_binds: {base_path: "api/v1"}
+  - generators:
+    - rand_id: {type: "random_text", min_length: 30, max_length: 30, character_set: "letters"}
+    - rand_str: {type: "random_text", min_length: 50, max_length: 255, character_set: "letters"}
+    - rand_name: {type: "random_text", min_length: 3, max_length: 32, character_set: "letters"}
+    - rand_int: {type: "random_int"}
+    - rand_file: {type: "random_text", min_length: 1024, max_length: 2048}
+    - rand_bool: {type: "choice", values: ["True", "False"]}
+
+- test:
+  - name: "POST simple map"
+  - url: {template: "$base_path/maps"}
+  - stop_on_failure: "true"
+  - method: "POST"
+  - expected_status: [200]
+  - headers: {Content-Type: "application/json", Accept: "application/json"}
+  - body: "{}"
+  - extract_binds:
+    - map_id: {jsonpath_mini: "id"}
+
+- test:
+  - name: "POST image"
+  - url: {template: "$base_path/maps/$map_id/images"}
+  - stop_on_failure: "true"
+  - method: "POST"
+  - expected_status: [200]
+  - headers: {Content-Type: "application/octet-stream", Accept: "application/json"}
+  - generator_binds: {gen_body: rand_file}
+  - variable_binds: {file_body: {template: "$gen_body"}}
+  - body: {template: "$file_body"}
+  - validators:
+    - extract_test: {jsonpath_mini: "id", test: "exists"}
+  - extract_binds:
+    - image_id: {jsonpath_mini: "id"}
+
+- test:
+  - name: "GET image"
+  - url: {template: "$base_path/maps/$map_id/images/$image_id"}
+  - stop_on_failure: "true"
+  - method: "GET"
+  - expected_status: [200]
+  - headers: {Accept: "application/octet-stream", Accept: "application/octet-stream"}
+  - validators:
+    - compare: {raw_body: "", comparator: "eq", expected: {template: "$file_body"} }
+
+- test:
+  - name: "POST doc"
+  - url: {template: "$base_path/maps"}
+  - stop_on_failure: "true"
+  - method: "POST"
+  - expected_status: [200]
+  - headers: {Content-Type: "application/json", Accept: "application/json"}
+  - generator_binds: {
+      config_key: rand_str,
+      config: rand_str,
+      view_key: rand_str,
+      view: rand_str,
+      root: rand_id,
+      edge_start: rand_id,
+      edge_end: rand_id,
+      edge_title: rand_str,
+      id: rand_id,
+      collapsed: rand_bool,
+      children1: rand_id,
+      children2: rand_id,
+      color: rand_str,
+      parentId: rand_id,
+      positionX: rand_int,
+      positionY: rand_int,
+      scale: rand_int,
+      title: rand_str,
+      width: rand_int,
+      height: rand_int,
+      headerHeight: rand_int,
+      bodyHeight: rand_int,
+    }
+  - body: {template: '{
+      "config": {"$config_key": "$config"},
+      "view": {"$view_key": "$view"},
+      "root": "$root",
+      "edges": [{
+        "start": "$edge_start",
+        "end": "$edge_end",
+        "title": "$edge_title"
+      }],
+      "nodes": [{
+        "id": "$id",
+        "backgroundImage": "$image_id",
+        "collapsed": "$collapsed",
+        "childrenIds": ["$children1", "$children2"],
+        "color": "$color",
+        "parentId": "$parentId",
+        "positionX": "$positionX",
+        "positionY": "$positionY",
+        "scale": "$scale",
+        "title": "$title",
+        "width": "$width",
+        "height": "$height",
+        "headerHeight": "$headerHeight",
+        "bodyHeight": "$bodyHeight"
+      }]
+    }'}
+  - validators:
+    - extract_test: {jsonpath_mini: "id", test: "exists"}
+  - extract_binds:
+    - map_id: {jsonpath_mini: "id"}
+
+- test:
+  - name: "GET doc"
+  - url: {template: "$base_path/maps/$map_id"}
+  - stop_on_failure: "true"
+  - method: "GET"
+  - headers: {Content-Type: "application/json", Accept: "application/json"}
+  - expected_status: [200]
+  - validators:
+    - compare: {jsonpath_mini: "root", comparator: "eq", expected: {template: "$root"}}
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: {template: "$map_id"}}
+    - compare: {jsonpath_mini: "edges", comparator: "count_eq", expected: 1}
+    - compare: {jsonpath_mini: "edges.0.start", comparator: "eq", expected: {template: "$edge_start"}}
+    - compare: {jsonpath_mini: "edges.0.end", comparator: "eq", expected: {template: "$edge_end"}}
+    - compare: {jsonpath_mini: "edges.0.title", comparator: "eq", expected: {template: "$edge_title"}}
+    - compare: {jsonpath_mini: "nodes", comparator: "count_eq", expected: 1}
+    - compare: {jsonpath_mini: "nodes.0.id", comparator: "eq", expected: {template: "$id"}}
+    - compare: {jsonpath_mini: "nodes.0.backgroundImage", comparator: "eq", expected: {template: "$image_id"}}
+    - compare: {jsonpath_mini: "nodes.0.collapsed", comparator: "str_eq", expected: {template: "$collapsed"}}
+    - compare: {jsonpath_mini: "nodes.0.childrenIds", comparator: "count_eq", expected: 2}
+    - compare: {jsonpath_mini: "nodes.0.childrenIds.0", comparator: "eq", expected: {template: "$children1"}}
+    - compare: {jsonpath_mini: "nodes.0.childrenIds.1", comparator: "eq", expected: {template: "$children2"}}
+    - compare: {jsonpath_mini: "nodes.0.color", comparator: "eq", expected: {template: "$color"}}
+    - compare: {jsonpath_mini: "nodes.0.parentId", comparator: "eq", expected: {template: "$parentId"}}
+    - compare: {jsonpath_mini: "nodes.0.positionX", comparator: "str_eq", expected: {template: "$positionX.0"}}
+    - compare: {jsonpath_mini: "nodes.0.positionY", comparator: "str_eq", expected: {template: "$positionY.0"}}
+    - compare: {jsonpath_mini: "nodes.0.scale", comparator: "str_eq", expected: {template: "$scale.0"}}
+    - compare: {jsonpath_mini: "nodes.0.title", comparator: "eq", expected: {template: "$title"}}
+    - compare: {jsonpath_mini: "nodes.0.width", comparator: "str_eq", expected: {template: "$width.0"}}
+    - compare: {jsonpath_mini: "nodes.0.height", comparator: "str_eq", expected: {template: "$height.0"}}
+    - compare: {jsonpath_mini: "nodes.0.headerHeight", comparator: "str_eq", expected: {template: "$headerHeight.0"}}
+    - compare: {jsonpath_mini: "nodes.0.bodyHeight", comparator: "str_eq", expected: {template: "$bodyHeight.0"}}
+    - compare: {jsonpath_mini: {template: "config.$config_key"}, comparator: "eq", expected: {template: "$config"}}
+    - compare: {jsonpath_mini: {template: "view.$view_key"}, comparator: "eq", expected: {template: "$view"}}
+
+- test:
+  - name: "POST example doc"
+  - url: {template: "$base_path/maps"}
+  - stop_on_failure: "true"
+  - method: "POST"
+  - headers: {Content-Type: "application/json", Accept: "application/json"}
+  - body: {template: '{
+      "config": {
+        "edgeTextDistance": 2,
+        "headerLineMargin": 13,
+        "oddColor": "white",
+        "oddOpacity": 0.44,
+        "roundCornerWidth": 5,
+        "titleBottomMargin": 5,
+        "titleJustifyLines": 4,
+        "titleLeftMargin": 13,
+        "titleRightMargin": 5,
+        "titleTopMargin": 15,
+        "zoomMargin": 20
+      },
+      "edges": [
+        {
+          "end": "urn:imapping:87a57592-91ea-4f27-9a96-908a08732e84",
+          "start": "urn:imapping:4dc7bd30-61f5-4337-9d6c-5bde9abb6d32",
+          "title": "see also"
+        },
+        {
+          "end": "urn:imapping:03aff569-2bb1-432d-8ee2-6f4fc2784d59",
+          "start": "urn:imapping:32c8c4dd-89e6-4b37-b6e7-f7da3503f153",
+          "title": "explained here"
+        },
+        {
+          "end": "urn:imapping:b8eaa4c9-5f40-4a1b-893c-cc304130b1c6",
+          "start": "urn:imapping:3605e164-727e-48d0-895d-96cacdd1611c",
+          "title": "phone"
+        },
+        {
+          "end": "urn:imapping:b71b175e-ff29-43a0-a580-c88d9297a21e",
+          "start": "urn:imapping:32af18b5-2d7c-4278-ac07-4744407752ef",
+          "title": "see also"
+        },
+        {
+          "end": "urn:imapping:604e3f57-1787-4487-973e-49e1bdbc1672",
+          "start": "urn:imapping:f12694ee-e666-4db8-b9b6-aa7f8068ff3d",
+          "title": "try this out"
+        },
+        {
+          "end": "urn:imapping:bdbf0763-86aa-4a3e-a422-081494d98e22",
+          "start": "urn:imapping:72ea65dd-bbae-4610-b59f-f217429f4375",
+          "title": "leads"
+        },
+        {
+          "end": "urn:imapping:3e1b3ad5-2822-4bd4-b44f-d8ec649d2488",
+          "start": "urn:imapping:cc651459-e7dc-4259-87ab-c0301d2b5f20",
+          "title": "see also"
+        },
+        {
+          "end": "urn:imapping:82d6c2fe-44b8-42b9-b346-245e467ee33c",
+          "start": "urn:imapping:7f04fd2d-8839-43f3-9f80-19f4f93c0a95",
+          "title": "see also"
+        },
+        {
+          "end": "urn:imapping:ba348168-3908-44f3-b55b-10e4eda72330",
+          "start": "urn:imapping:6f1f1788-88aa-43ae-88c4-ec7f581cf458",
+          "title": "explained here"
+        },
+        {
+          "end": "urn:imapping:c37a10dc-6814-464a-9822-6071dbb04269",
+          "start": "urn:imapping:3605e164-727e-48d0-895d-96cacdd1611c",
+          "title": "has friend"
+        },
+        {
+          "end": "urn:imapping:4dc7bd30-61f5-4337-9d6c-5bde9abb6d32",
+          "start": "urn:imapping:1ef8a4ef-c471-4bc2-8d6c-466dc3681ad6",
+          "title": "see also"
+        },
+        {
+          "end": "urn:imapping:d70bee7f-3779-4870-aa6a-81e41210c874",
+          "start": "urn:imapping:cc651459-e7dc-4259-87ab-c0301d2b5f20",
+          "title": "see also"
+        },
+        {
+          "end": "urn:imapping:493f5bd9-7708-4fa7-8285-6681a9027912",
+          "start": "urn:imapping:7f04fd2d-8839-43f3-9f80-19f4f93c0a95",
+          "title": "see also"
+        }
+      ],
+      "nodes": [
+        {
+          "bodyHeight": 359.0,
+          "childrenIds": [
+            "urn:imapping:7f04fd2d-8839-43f3-9f80-19f4f93c0a95",
+            "urn:imapping:46630aad-d0fc-43cd-a78a-ad9bb2927c75",
+            "urn:imapping:07a367ca-aba0-45f7-b5c5-4d86cc53ab90",
+            "urn:imapping:da1e5bc0-3a29-4487-9dc0-d1ab66dd3093"
+          ],
+          "headerHeight": 16.0,
+          "id": "urn:imapping/root",
+          "positionX": 0.0,
+          "positionY": 0.0,
+          "scale": 0.7953181070456945,
+          "title": "This iMap is an introduction how to use the iMapping Tool",
+          "width": 650.0
+        },
+        {
+          "backgroundImage": "5a5380f2e1d9614ca89befdb",
+          "bodyHeight": 218.0,
+          "childrenIds": [
+            "urn:imapping:4dc7bd30-61f5-4337-9d6c-5bde9abb6d32",
+            "urn:imapping:b15b3da1-8df0-4280-a09f-c3e324d1be92",
+            "urn:imapping:f4a104c3-ec1b-49aa-a4c5-2c84ee95e67f",
+            "urn:imapping:204f529c-c876-4bec-98d8-6df4a1c7f4e9"
+          ],
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:7f04fd2d-8839-43f3-9f80-19f4f93c0a95",
+          "parentId": "urn:imapping/root",
+          "positionX": 260.0,
+          "positionY": 9.0,
+          "scale": 0.7331495793083395,
+          "title": "Basics",
+          "width": 540.0
+        },
+        {
+          "bodyHeight": 260.0,
+          "childrenIds": [
+            "urn:imapping:be007e19-118d-4169-b7fb-a3d910cd029c",
+            "urn:imapping:1ac71b53-8e2b-46ef-bc3c-4209884bad06"
+          ],
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:4dc7bd30-61f5-4337-9d6c-5bde9abb6d32",
+          "parentId": "urn:imapping:7f04fd2d-8839-43f3-9f80-19f4f93c0a95",
+          "positionX": 600.0,
+          "positionY": 15.0,
+          "scale": 0.4673785559022069,
+          "title": "Search (QuiKey)",
+          "width": 120.0
+        },
+        {
+          "bodyHeight": 54.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:be007e19-118d-4169-b7fb-a3d910cd029c",
+          "parentId": "urn:imapping:4dc7bd30-61f5-4337-9d6c-5bde9abb6d32",
+          "positionX": 20.0,
+          "positionY": 15.0,
+          "title": "<a href=\"#urn:cds:9fef57a2-bd96-4f41-b9df-5f5716239f0b\" class=\"stif-internal cds-automatic\">QuiKey</a> is a small advanced search and editing tool, that you get when you press Ctrl+F ",
+          "width": 200.0
+        },
+        {
+          "bodyHeight": 157.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 112.0,
+          "id": "urn:imapping:1ac71b53-8e2b-46ef-bc3c-4209884bad06",
+          "parentId": "urn:imapping:4dc7bd30-61f5-4337-9d6c-5bde9abb6d32",
+          "positionX": 20.0,
+          "positionY": 75.0,
+          "scale": 0.8,
+          "title": "You can use QuiKey for search: simply type some parts of words that you are looking for, select the item that you mean (with arrow keys or mouse) and press Enter.",
+          "width": 200.0
+        },
+        {
+          "bodyHeight": 260.0,
+          "childrenIds": [
+            "urn:imapping:03aff569-2bb1-432d-8ee2-6f4fc2784d59",
+            "urn:imapping:b4de15ce-29e5-4d02-8acd-7f27a23ac7aa",
+            "urn:imapping:ba348168-3908-44f3-b55b-10e4eda72330",
+            "urn:imapping:0187ac85-7238-492c-a9eb-cfdccc896e1d",
+            "urn:imapping:b4fefcc0-f89d-4901-bedf-5f25baa1bb9f",
+            "urn:imapping:c53a4ba4-86fc-485b-a43a-3de9767349cd"
+          ],
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:b15b3da1-8df0-4280-a09f-c3e324d1be92",
+          "parentId": "urn:imapping:7f04fd2d-8839-43f3-9f80-19f4f93c0a95",
+          "positionX": 440.0,
+          "positionY": 15.0,
+          "scale": 0.5157722297057317,
+          "title": "Reorganize / Layout",
+          "width": 150.0
+        },
+        {
+          "bodyHeight": 52.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 80.0,
+          "id": "urn:imapping:03aff569-2bb1-432d-8ee2-6f4fc2784d59",
+          "parentId": "urn:imapping:b15b3da1-8df0-4280-a09f-c3e324d1be92",
+          "positionX": 20.0,
+          "positionY": 357.0,
+          "scale": 0.6284593939781189,
+          "title": "To scale an items children area larger or smaller as a whole, press Shift and drag the bottom right corner. This will change the overall size of all its children.",
+          "width": 230.0
+        },
+        {
+          "bodyHeight": 49.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:b4de15ce-29e5-4d02-8acd-7f27a23ac7aa",
+          "parentId": "urn:imapping:b15b3da1-8df0-4280-a09f-c3e324d1be92",
+          "positionX": 20.0,
+          "positionY": 21.0,
+          "scale": 0.7009350061416626,
+          "title": "To move an item around, just grab the text part of it and drag.",
+          "width": 230.0
+        },
+        {
+          "bodyHeight": 50.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 112.0,
+          "id": "urn:imapping:ba348168-3908-44f3-b55b-10e4eda72330",
+          "parentId": "urn:imapping:b15b3da1-8df0-4280-a09f-c3e324d1be92",
+          "positionX": 20.0,
+          "positionY": 93.0,
+          "scale": 0.688524603843689,
+          "title": "You can open and close (expand and collapse) items by clicking their black triangle or by pressing the Space key when they are selected. This will show or hide their children area, where you can create or move other items.",
+          "width": 230.0
+        },
+        {
+          "bodyHeight": 40.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:0187ac85-7238-492c-a9eb-cfdccc896e1d",
+          "parentId": "urn:imapping:b15b3da1-8df0-4280-a09f-c3e324d1be92",
+          "positionX": 20.0,
+          "positionY": 54.0,
+          "scale": 0.800000011920929,
+          "title": "Alternatively, grab it anywhere while pressing Alt.",
+          "width": 230.0
+        },
+        {
+          "bodyHeight": 47.0,
+          "childrenIds": [
+            "urn:imapping:e94a06a9-3c89-46a2-94a4-2e1db7079d1f"
+          ],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 64.0,
+          "id": "urn:imapping:b4fefcc0-f89d-4901-bedf-5f25baa1bb9f",
+          "parentId": "urn:imapping:b15b3da1-8df0-4280-a09f-c3e324d1be92",
+          "positionX": 20.0,
+          "positionY": 213.0,
+          "scale": 0.800000011920929,
+          "title": "When an item contains children that are currently hidden because it is closed (like this one), this is indicated by the black triangle.",
+          "width": 230.0
+        },
+        {
+          "bodyHeight": 44.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:e94a06a9-3c89-46a2-94a4-2e1db7079d1f",
+          "parentId": "urn:imapping:b4fefcc0-f89d-4901-bedf-5f25baa1bb9f",
+          "positionX": 30.0,
+          "positionY": 18.0,
+          "scale": 0.800000011920929,
+          "title": "here is the hidden child item ;)",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 50.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 64.0,
+          "id": "urn:imapping:c53a4ba4-86fc-485b-a43a-3de9767349cd",
+          "parentId": "urn:imapping:b15b3da1-8df0-4280-a09f-c3e324d1be92",
+          "positionX": 20.0,
+          "positionY": 285.0,
+          "scale": 0.6683937311172485,
+          "title": "To change the form of an item, drag its bottom right corner. (\"Resizing\") You can adjust an items height only when it is open.",
+          "width": 230.0
+        },
+        {
+          "bodyHeight": 260.0,
+          "childrenIds": [
+            "urn:imapping:604e3f57-1787-4487-973e-49e1bdbc1672",
+            "urn:imapping:f8542c25-fef9-49e4-b614-fedf07ed20c2",
+            "urn:imapping:cc651459-e7dc-4259-87ab-c0301d2b5f20"
+          ],
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:f4a104c3-ec1b-49aa-a4c5-2c84ee95e67f",
+          "parentId": "urn:imapping:7f04fd2d-8839-43f3-9f80-19f4f93c0a95",
+          "positionX": 170.0,
+          "positionY": 15.0,
+          "scale": 0.6751213137781383,
+          "title": "Add and Change Content",
+          "width": 260.0
+        },
+        {
+          "bodyHeight": 86.0,
+          "childrenIds": [
+            "urn:imapping:1cdc691f-b666-46d9-b89a-f118ea179060",
+            "urn:imapping:ef9a8219-2d1a-4a21-a869-ea623ad3995c"
+          ],
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:604e3f57-1787-4487-973e-49e1bdbc1672",
+          "parentId": "urn:imapping:f4a104c3-ec1b-49aa-a4c5-2c84ee95e67f",
+          "positionX": 20.0,
+          "positionY": 141.0,
+          "scale": 0.8086198241135171,
+          "title": "Links (Arrows)",
+          "width": 350.0
+        },
+        {
+          "bodyHeight": 51.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:1cdc691f-b666-46d9-b89a-f118ea179060",
+          "parentId": "urn:imapping:604e3f57-1787-4487-973e-49e1bdbc1672",
+          "positionX": 20.0,
+          "positionY": 66.0,
+          "title": "To change a link\u2019s type or text, press Ctrl and double-click it (or Ctrl+Enter while it is selected).",
+          "width": 390.0
+        },
+        {
+          "bodyHeight": 44.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:ef9a8219-2d1a-4a21-a869-ea623ad3995c",
+          "parentId": "urn:imapping:604e3f57-1787-4487-973e-49e1bdbc1672",
+          "positionX": 20.0,
+          "positionY": 12.0,
+          "title": "To draw a link (arrow) between two Items, hold down the Ctrl-key and drag from one item to another. Then enter the name of the relation and press Enter.",
+          "width": 390.0
+        },
+        {
+          "bodyHeight": 113.0,
+          "childrenIds": [
+            "urn:imapping:b2817c1b-71a6-435e-aa53-13f4a9a52b87",
+            "urn:imapping:ba9bebf4-61a4-43ca-a03e-38e54928837b"
+          ],
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:f8542c25-fef9-49e4-b614-fedf07ed20c2",
+          "parentId": "urn:imapping:f4a104c3-ec1b-49aa-a4c5-2c84ee95e67f",
+          "positionX": 20.0,
+          "positionY": 249.0,
+          "scale": 0.7673981305573802,
+          "title": "Files",
+          "width": 350.0
+        },
+        {
+          "bodyHeight": 72.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:b2817c1b-71a6-435e-aa53-13f4a9a52b87",
+          "parentId": "urn:imapping:f8542c25-fef9-49e4-b614-fedf07ed20c2",
+          "positionX": 20.0,
+          "positionY": 6.0,
+          "scale": 0.800000011920929,
+          "title": "You can drag any file into an iMap. You can rename the resulting item as you like. When you click the file icon on that item, the file will be opened.",
+          "width": 410.0
+        },
+        {
+          "bodyHeight": 72.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 80.0,
+          "id": "urn:imapping:ba9bebf4-61a4-43ca-a03e-38e54928837b",
+          "parentId": "urn:imapping:f8542c25-fef9-49e4-b614-fedf07ed20c2",
+          "positionX": 20.0,
+          "positionY": 60.0,
+          "scale": 0.800000011920929,
+          "title": "If you insert a graphic file (.jpeg, .gif or .png) it will be shown in the map. But BEWARE: Currently, this cause the iMapping Tool to use a lot of memory, so do not use too many images (you can use between 40 and 200 - depending on their size...)",
+          "width": 410.0
+        },
+        {
+          "bodyHeight": 107.0,
+          "childrenIds": [
+            "urn:imapping:59015588-fdb4-4161-8437-fffc14618f27",
+            "urn:imapping:a6a914f0-840e-4e6f-96ec-67aebbcd91b7"
+          ],
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:cc651459-e7dc-4259-87ab-c0301d2b5f20",
+          "parentId": "urn:imapping:f4a104c3-ec1b-49aa-a4c5-2c84ee95e67f",
+          "positionX": 20.0,
+          "positionY": 12.0,
+          "scale": 0.8900947808599889,
+          "title": "Text",
+          "width": 350.0
+        },
+        {
+          "bodyHeight": 47.0,
+          "childrenIds": [
+            "urn:imapping:222f9983-f6d0-47ef-bde4-d2ab79e97615"
+          ],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:59015588-fdb4-4161-8437-fffc14618f27",
+          "parentId": "urn:imapping:cc651459-e7dc-4259-87ab-c0301d2b5f20",
+          "positionX": 20.0,
+          "positionY": 9.0,
+          "scale": 0.8511736392974854,
+          "title": "To create a new item, hold the Ctrl-key and double-click anywhere. Type your text into the box. To complete this, press Enter.",
+          "width": 350.0
+        },
+        {
+          "bodyHeight": 50.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:222f9983-f6d0-47ef-bde4-d2ab79e97615",
+          "parentId": "urn:imapping:59015588-fdb4-4161-8437-fffc14618f27",
+          "positionX": 0.0,
+          "positionY": 0.0,
+          "scale": 0.7981966733932495,
+          "title": "To change the text of an existing item, select the item (e.g. by clicking on it) and press Enter.",
+          "width": 250.0
+        },
+        {
+          "bodyHeight": 53.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:a6a914f0-840e-4e6f-96ec-67aebbcd91b7",
+          "parentId": "urn:imapping:cc651459-e7dc-4259-87ab-c0301d2b5f20",
+          "positionX": 20.0,
+          "positionY": 63.0,
+          "scale": 0.7528089880943298,
+          "title": "To change the content of an item, hold the Ctrl key and double-click its text area or simply press Ctrl+Enter while it is selected.",
+          "width": 350.0
+        },
+        {
+          "bodyHeight": 257.0,
+          "childrenIds": [
+            "urn:imapping:2510a016-40a3-43a0-82c8-00619ed00cb7",
+            "urn:imapping:e184ebdd-31a7-4d29-be02-19726f9a7e5a",
+            "urn:imapping:5ec9db91-c0c8-47ea-a56f-0209463c3b82",
+            "urn:imapping:320ab2b7-86ac-44aa-abcc-85f0285925b6",
+            "urn:imapping:b0e64e2d-0745-4d0d-a246-b248c7d96efe",
+            "urn:imapping:f12694ee-e666-4db8-b9b6-aa7f8068ff3d",
+            "urn:imapping:1d1fad93-b366-4bff-935c-96d25f727113"
+          ],
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:204f529c-c876-4bec-98d8-6df4a1c7f4e9",
+          "parentId": "urn:imapping:7f04fd2d-8839-43f3-9f80-19f4f93c0a95",
+          "positionX": 10.0,
+          "positionY": 15.0,
+          "scale": 0.5604860457110423,
+          "title": "View and Navigate",
+          "width": 150.0
+        },
+        {
+          "bodyHeight": 49.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:2510a016-40a3-43a0-82c8-00619ed00cb7",
+          "parentId": "urn:imapping:204f529c-c876-4bec-98d8-6df4a1c7f4e9",
+          "positionX": 10.0,
+          "positionY": 252.0,
+          "scale": 0.518133819103241,
+          "title": "To zoom all the way out, press Shift+Esc",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 55.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 80.0,
+          "id": "urn:imapping:e184ebdd-31a7-4d29-be02-19726f9a7e5a",
+          "parentId": "urn:imapping:204f529c-c876-4bec-98d8-6df4a1c7f4e9",
+          "positionX": 10.0,
+          "positionY": 18.0,
+          "scale": 0.5808315277099609,
+          "title": "To move the whole map around in order to see another part of it (panning, scrolling), grab the empty space (in the lower part of an item) and drag. ",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 73.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 80.0,
+          "id": "urn:imapping:5ec9db91-c0c8-47ea-a56f-0209463c3b82",
+          "parentId": "urn:imapping:204f529c-c876-4bec-98d8-6df4a1c7f4e9",
+          "positionX": 10.0,
+          "positionY": 321.0,
+          "scale": 0.800000011920929,
+          "title": "Usually, links are visible only when the corresponding items are touched (mouse over) oder selected. To show links everywhere, press Ctrl+L or change it in the \"View\" menu.",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 47.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:320ab2b7-86ac-44aa-abcc-85f0285925b6",
+          "parentId": "urn:imapping:204f529c-c876-4bec-98d8-6df4a1c7f4e9",
+          "positionX": 10.0,
+          "positionY": 150.0,
+          "scale": 0.7421519160270691,
+          "title": "To zoom out one step, press Esc.",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 53.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 64.0,
+          "id": "urn:imapping:b0e64e2d-0745-4d0d-a246-b248c7d96efe",
+          "parentId": "urn:imapping:204f529c-c876-4bec-98d8-6df4a1c7f4e9",
+          "positionX": 10.0,
+          "positionY": 180.0,
+          "scale": 0.6127386689186096,
+          "title": "You can also zoom around freely by using the scroll function of your mouse or touchpad (just like in Google Maps).",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 47.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:f12694ee-e666-4db8-b9b6-aa7f8068ff3d",
+          "parentId": "urn:imapping:204f529c-c876-4bec-98d8-6df4a1c7f4e9",
+          "positionX": 10.0,
+          "positionY": 294.0,
+          "scale": 0.5872941017150879,
+          "title": "To follow a link, double-click it.",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 49.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFFBC0",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:1d1fad93-b366-4bff-935c-96d25f727113",
+          "parentId": "urn:imapping:204f529c-c876-4bec-98d8-6df4a1c7f4e9",
+          "positionX": 10.0,
+          "positionY": 108.0,
+          "scale": 0.5444335341453552,
+          "title": "To zoom to an item, double-click it. <br />Or press Enter when it is selected.",
+          "width": 240.0
+        },
+        {
+          "backgroundImage": "5a5380f2e1d9614ca89befd7",
+          "bodyHeight": 95.0,
+          "childrenIds": [
+            "urn:imapping:493f5bd9-7708-4fa7-8285-6681a9027912",
+            "urn:imapping:82d6c2fe-44b8-42b9-b346-245e467ee33c"
+          ],
+          "color": "#FFDBC0",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:46630aad-d0fc-43cd-a78a-ad9bb2927c75",
+          "parentId": "urn:imapping/root",
+          "positionX": 20.0,
+          "positionY": 9.0,
+          "scale": 0.9933734337509996,
+          "title": "<strong>First of all:</strong>",
+          "width": 230.0
+        },
+        {
+          "bodyHeight": 49.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFDBC0",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:493f5bd9-7708-4fa7-8285-6681a9027912",
+          "parentId": "urn:imapping:46630aad-d0fc-43cd-a78a-ad9bb2927c75",
+          "positionX": 20.0,
+          "positionY": 9.0,
+          "scale": 1.2913751602172852,
+          "title": "<strong>To Zoom,</strong> just scroll or double-click any item.",
+          "width": 190.0
+        },
+        {
+          "bodyHeight": 151.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#FFDBC0",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:82d6c2fe-44b8-42b9-b346-245e467ee33c",
+          "parentId": "urn:imapping:46630aad-d0fc-43cd-a78a-ad9bb2927c75",
+          "positionX": 20.0,
+          "positionY": 48.0,
+          "scale": 0.8,
+          "title": "<strong>To zoom out,</strong> press Esc or double-click the background.",
+          "width": 190.0
+        },
+        {
+          "bodyHeight": 176.0,
+          "childrenIds": [
+            "uri:cds:inbox",
+            "urn:imapping:52d06025-0737-4698-8ab3-967f9ac3a356",
+            "urn:imapping:87a57592-91ea-4f27-9a96-908a08732e84",
+            "urn:imapping:d70bee7f-3779-4870-aa6a-81e41210c874",
+            "urn:imapping:b71b175e-ff29-43a0-a580-c88d9297a21e",
+            "urn:imapping:3e1b3ad5-2822-4bd4-b44f-d8ec649d2488",
+            "urn:imapping:2fb7eae9-3eef-40fd-9ae7-b28fb31dbc84"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:07a367ca-aba0-45f7-b5c5-4d86cc53ab90",
+          "parentId": "urn:imapping/root",
+          "positionX": 260.0,
+          "positionY": 252.0,
+          "scale": 0.39526156164112314,
+          "title": "Advanced Tips and Tricks",
+          "width": 540.0
+        },
+        {
+          "bodyHeight": 155.0,
+          "childrenIds": [
+            "urn:imapping:1ef8a4ef-c471-4bc2-8d6c-466dc3681ad6"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "uri:cds:inbox",
+          "parentId": "urn:imapping:07a367ca-aba0-45f7-b5c5-4d86cc53ab90",
+          "positionX": 650.0,
+          "positionY": 24.0,
+          "scale": 0.9429996912930815,
+          "title": "IMappingInbox",
+          "width": 200.0
+        },
+        {
+          "bodyHeight": 54.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 128.0,
+          "id": "urn:imapping:1ef8a4ef-c471-4bc2-8d6c-466dc3681ad6",
+          "parentId": "uri:cds:inbox",
+          "positionX": 20.0,
+          "positionY": 15.0,
+          "scale": 0.6968824863433838,
+          "title": "The <a href=\"#urn:cds:38b830c8-3be6-4877-bdd5-672916c1a1f0\" class=\"stif-internal cds-automatic\">iMapping</a> Inbox is the place where homeless items show up. E.g. when you have created them with <a href=\"#urn:cds:9fef57a2-bd96-4f41-b9df-5f5716239f0b\" class=\"stif-internal cds-automatic\">QuiKey</a>, so they dont yet have a position in the map.",
+          "width": 170.0
+        },
+        {
+          "bodyHeight": 50.0,
+          "childrenIds": [
+            "urn:imapping:6f1f1788-88aa-43ae-88c4-ec7f581cf458",
+            "urn:imapping:32c8c4dd-89e6-4b37-b6e7-f7da3503f153",
+            "urn:imapping:a5cdca48-a105-4788-963d-9509ae3e7186",
+            "urn:imapping:5d45c214-1a1c-4cf3-a6c4-d3c71d718efc"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:52d06025-0737-4698-8ab3-967f9ac3a356",
+          "parentId": "urn:imapping:07a367ca-aba0-45f7-b5c5-4d86cc53ab90",
+          "positionX": 650.0,
+          "positionY": 354.0,
+          "scale": 0.6744167147083531,
+          "title": "How to get rid of this introduction map and start making your own",
+          "width": 680.0
+        },
+        {
+          "bodyHeight": 41.0,
+          "childrenIds": [
+            "urn:imapping:f54ab3aa-c923-4214-9727-a573781785a5"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:6f1f1788-88aa-43ae-88c4-ec7f581cf458",
+          "parentId": "urn:imapping:52d06025-0737-4698-8ab3-967f9ac3a356",
+          "positionX": 470.0,
+          "positionY": 6.0,
+          "scale": 0.72245842384174,
+          "title": "close items",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 52.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:f54ab3aa-c923-4214-9727-a573781785a5",
+          "parentId": "urn:imapping:6f1f1788-88aa-43ae-88c4-ec7f581cf458",
+          "positionX": 20.0,
+          "positionY": 9.0,
+          "scale": 0.4995545744895935,
+          "title": "Select the whole \"This iMap is an Introduction ...\" item at the top and press space.",
+          "width": 300.0
+        },
+        {
+          "bodyHeight": 38.0,
+          "childrenIds": [
+            "urn:imapping:8bf5ae9c-f427-44e6-9987-f35ed2c928fd"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:32c8c4dd-89e6-4b37-b6e7-f7da3503f153",
+          "parentId": "urn:imapping:52d06025-0737-4698-8ab3-967f9ac3a356",
+          "positionX": 260.0,
+          "positionY": 6.0,
+          "scale": 0.7208227438138298,
+          "title": "shrink it",
+          "width": 200.0
+        },
+        {
+          "bodyHeight": 52.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:8bf5ae9c-f427-44e6-9987-f35ed2c928fd",
+          "parentId": "urn:imapping:32c8c4dd-89e6-4b37-b6e7-f7da3503f153",
+          "positionX": 20.0,
+          "positionY": 9.0,
+          "scale": 0.45590725541114807,
+          "title": "...by scaling it down and zooming in when you need it.",
+          "width": 220.0
+        },
+        {
+          "bodyHeight": 41.0,
+          "childrenIds": [
+            "urn:imapping:c7531f36-7793-44fb-9a7f-96409366585c"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:a5cdca48-a105-4788-963d-9509ae3e7186",
+          "parentId": "urn:imapping:52d06025-0737-4698-8ab3-967f9ac3a356",
+          "positionX": 10.0,
+          "positionY": 6.0,
+          "scale": 0.7878738050397297,
+          "title": "start a new map",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 52.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:c7531f36-7793-44fb-9a7f-96409366585c",
+          "parentId": "urn:imapping:a5cdca48-a105-4788-963d-9509ae3e7186",
+          "positionX": 20.0,
+          "positionY": 9.0,
+          "scale": 0.5291050672531128,
+          "title": "Select \u201cNew iMap\u201d from the File menu or press Ctrl+N and enter a title.",
+          "width": 260.0
+        },
+        {
+          "bodyHeight": 38.0,
+          "childrenIds": [
+            "urn:imapping:1d866525-1253-49e1-a20f-ef4bb1fd7c7b"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:5d45c214-1a1c-4cf3-a6c4-d3c71d718efc",
+          "parentId": "urn:imapping:52d06025-0737-4698-8ab3-967f9ac3a356",
+          "positionX": 720.0,
+          "positionY": 6.0,
+          "scale": 0.7160996479843695,
+          "title": "ignore it",
+          "width": 280.0
+        },
+        {
+          "bodyHeight": 52.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:1d866525-1253-49e1-a20f-ef4bb1fd7c7b",
+          "parentId": "urn:imapping:5d45c214-1a1c-4cf3-a6c4-d3c71d718efc",
+          "positionX": 10.0,
+          "positionY": 6.0,
+          "scale": 0.7244324088096619,
+          "title": "just leave it where it is and build your own stuff around it. There is enough space for everything.",
+          "width": 370.0
+        },
+        {
+          "bodyHeight": 131.0,
+          "childrenIds": [
+            "urn:imapping:f413dd99-c1ed-4303-af93-e7fd1a3f55ee"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:87a57592-91ea-4f27-9a96-908a08732e84",
+          "parentId": "urn:imapping:07a367ca-aba0-45f7-b5c5-4d86cc53ab90",
+          "positionX": 650.0,
+          "positionY": 201.0,
+          "scale": 0.9236264833951342,
+          "title": "QuiKey",
+          "width": 200.0
+        },
+        {
+          "bodyHeight": 37.0,
+          "childrenIds": [
+            "urn:imapping:177a99e8-3470-4833-9718-eb3e61c061cf"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 80.0,
+          "id": "urn:imapping:f413dd99-c1ed-4303-af93-e7fd1a3f55ee",
+          "parentId": "urn:imapping:87a57592-91ea-4f27-9a96-908a08732e84",
+          "positionX": 20.0,
+          "positionY": 15.0,
+          "scale": 0.8993680035626448,
+          "title": "Some background information on QuiKey including some documentation is available online",
+          "width": 160.0
+        },
+        {
+          "bodyHeight": 74.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:177a99e8-3470-4833-9718-eb3e61c061cf",
+          "parentId": "urn:imapping:f413dd99-c1ed-4303-af93-e7fd1a3f55ee",
+          "positionX": 10.0,
+          "positionY": 9.0,
+          "scale": 0.800000011920929,
+          "title": " http://quikey.info/",
+          "width": 160.0
+        },
+        {
+          "bodyHeight": 308.0,
+          "childrenIds": [
+            "urn:imapping:055d1740-cfab-4fb5-9dc0-90d467c63bb6",
+            "urn:imapping:15f94e2b-3c50-4aec-b7e6-6bd39454bb79",
+            "urn:imapping:fe3756da-a380-464c-9a1d-ec4fdcd25be5",
+            "urn:imapping:27eef8dd-d737-4100-b567-8bd010692b09",
+            "urn:imapping:eb5fb62c-7155-48aa-85e9-7cf40f41ad9a",
+            "urn:imapping:57cdaea5-be83-4ca7-a6ab-7a26067be5ae",
+            "urn:imapping:d642a29e-ea22-4eef-9c37-d585c9c34cf6"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:d70bee7f-3779-4870-aa6a-81e41210c874",
+          "parentId": "urn:imapping:07a367ca-aba0-45f7-b5c5-4d86cc53ab90",
+          "positionX": 860.0,
+          "positionY": 24.0,
+          "scale": 0.45754582920592946,
+          "title": "Text Formatting",
+          "width": 470.0
+        },
+        {
+          "bodyHeight": 51.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 98.0,
+          "id": "urn:imapping:055d1740-cfab-4fb5-9dc0-90d467c63bb6",
+          "parentId": "urn:imapping:d70bee7f-3779-4870-aa6a-81e41210c874",
+          "positionX": 30.0,
+          "positionY": 21.0,
+          "scale": 0.8,
+          "title": "<strong>Basic Text Formatting</strong> <pre>use *stars* for</pre> <strong>bold</strong><pre>use __double underlines__ for</pre> <em>italics</em>",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 84.0,
+          "childrenIds": [
+            "urn:imapping:841d992b-5cfc-4807-92d3-0cd188f5554b"
+          ],
+          "color": "#BFF5B9",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:15f94e2b-3c50-4aec-b7e6-6bd39454bb79",
+          "parentId": "urn:imapping:d70bee7f-3779-4870-aa6a-81e41210c874",
+          "positionX": 350.0,
+          "positionY": 399.0,
+          "scale": 0.800000011920929,
+          "title": "You can also get a printable German version of this formatting info, including the help sheet here:",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 74.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#BFF5B9",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:841d992b-5cfc-4807-92d3-0cd188f5554b",
+          "parentId": "urn:imapping:15f94e2b-3c50-4aec-b7e6-6bd39454bb79",
+          "positionX": 20.0,
+          "positionY": 15.0,
+          "scale": 0.800000011920929,
+          "title": " http://www.imapping.info/spickzettel-furs-imapping-tool/",
+          "width": 310.0
+        },
+        {
+          "bodyHeight": 78.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 180.0,
+          "id": "urn:imapping:fe3756da-a380-464c-9a1d-ec4fdcd25be5",
+          "parentId": "urn:imapping:d70bee7f-3779-4870-aa6a-81e41210c874",
+          "positionX": 30.0,
+          "positionY": 144.0,
+          "scale": 0.800000011920929,
+          "title": "<h3>Headings  </h3><pre>= Heading1 =\n== Heading2 ==\n=== Heading3 ===</pre>The \"=\" symbols at the end of lines are optional.  It is also ok to write: <pre>= Heading1 \n== Heading2  \n=== Heading3</pre>",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 72.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 315.0,
+          "id": "urn:imapping:27eef8dd-d737-4100-b567-8bd010692b09",
+          "parentId": "urn:imapping:d70bee7f-3779-4870-aa6a-81e41210c874",
+          "positionX": 350.0,
+          "positionY": 24.0,
+          "scale": 2.264705882352941,
+          "title": "<h3>Lists </h3>Unordered list:<pre> * item one\n * item two\n   * subitem 1\n   * subitem 2\n * item three\nor:\n - item one \n - item two\n   - subitem\n   - ... </pre>Ordered list:<pre>+item one\n+item two\n  +subitem 1\n  +subitem 2\n+item three</pre>",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 96.0,
+          "childrenIds": [
+            "urn:imapping:dc0b1ae6-9fa7-471b-adc4-b3545cbc5fcc"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 110.0,
+          "id": "urn:imapping:eb5fb62c-7155-48aa-85e9-7cf40f41ad9a",
+          "parentId": "urn:imapping:d70bee7f-3779-4870-aa6a-81e41210c874",
+          "positionX": 670.0,
+          "positionY": 249.0,
+          "scale": 1.0045184454084435,
+          "title": "<h3>Experimental  </h3>Text Passages with CSS (in this example green text color):<pre>{{\"style=color: green;\"}}  \nGreen text</pre>",
+          "width": 310.0
+        },
+        {
+          "bodyHeight": 78.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:dc0b1ae6-9fa7-471b-adc4-b3545cbc5fcc",
+          "parentId": "urn:imapping:eb5fb62c-7155-48aa-85e9-7cf40f41ad9a",
+          "positionX": 20.0,
+          "positionY": 15.0,
+          "scale": 0.800000011920929,
+          "title": "<p style=\"color: green;,\">Green Text<br />Attention: This styling information is lost, when editing the item again.",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 124.0,
+          "childrenIds": [
+            "urn:imapping:178ffe3c-bc8b-4f23-8957-082741d3b1ef"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 160.0,
+          "id": "urn:imapping:57cdaea5-be83-4ca7-a6ab-7a26067be5ae",
+          "parentId": "urn:imapping:d70bee7f-3779-4870-aa6a-81e41210c874",
+          "positionX": 30.0,
+          "positionY": 357.0,
+          "scale": 0.7800307676384665,
+          "title": "<h3>Tables  </h3>Recommended syntax:<pre>!! Header 1 !! Header 2\n:: Cell 1   :: Cell 2</pre>Result:<table><tbody><tr><th> Header 1 </th><th> Header 2</th></tr><tr><td> Cell 1   </td><td> Cell 2</td></tr></tbody></table>",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 58.0,
+          "childrenIds": [
+            "urn:imapping:838f0cf9-636f-4f18-9c40-5f20a839135c"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:178ffe3c-bc8b-4f23-8957-082741d3b1ef",
+          "parentId": "urn:imapping:57cdaea5-be83-4ca7-a6ab-7a26067be5ae",
+          "positionX": 20.0,
+          "positionY": 21.0,
+          "scale": 0.7469091032232557,
+          "title": "There are many more table options \u2013 see online documentation",
+          "width": 290.0
+        },
+        {
+          "bodyHeight": 71.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:838f0cf9-636f-4f18-9c40-5f20a839135c",
+          "parentId": "urn:imapping:178ffe3c-bc8b-4f23-8957-082741d3b1ef",
+          "positionX": 20.0,
+          "positionY": 24.0,
+          "scale": 0.800000011920929,
+          "title": " http://semanticweb.org/wiki/CDS_Tools/Wiki_Syntax",
+          "width": 360.0
+        },
+        {
+          "bodyHeight": 53.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 188.0,
+          "id": "urn:imapping:d642a29e-ea22-4eef-9c37-d585c9c34cf6",
+          "parentId": "urn:imapping:d70bee7f-3779-4870-aa6a-81e41210c874",
+          "positionX": 670.0,
+          "positionY": 30.0,
+          "title": "<h3>Verbatim Block </h3>Verbatim content is not interpreted by the parser.Use triple curly brackets { { { } } } (without the spaces).Result: <pre>This is a \n*verbatim* \nblock.\n </pre>",
+          "width": 310.0
+        },
+        {
+          "bodyHeight": 380.0,
+          "childrenIds": [
+            "urn:imapping:9f482a81-1cf5-40ae-8fdf-303f8f414844",
+            "urn:imapping:33e944d4-ff80-403c-b5d6-395806566be4",
+            "urn:imapping:4c0e628c-c7f5-489b-9958-1c6e7ae1dc33",
+            "urn:imapping:b72aea7d-7f07-40e6-82b9-3074f3d43686",
+            "urn:imapping:faac4137-369a-491d-a077-e91bb9535a70",
+            "urn:imapping:6d0ebd23-338b-45ed-940b-dabe1b998fcf"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:b71b175e-ff29-43a0-a580-c88d9297a21e",
+          "parentId": "urn:imapping:07a367ca-aba0-45f7-b5c5-4d86cc53ab90",
+          "positionX": 310.0,
+          "positionY": 24.0,
+          "scale": 0.9669001497384667,
+          "title": "Equivalent Items",
+          "width": 330.0
+        },
+        {
+          "bodyHeight": 74.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 64.0,
+          "id": "urn:imapping:9f482a81-1cf5-40ae-8fdf-303f8f414844",
+          "parentId": "urn:imapping:b71b175e-ff29-43a0-a580-c88d9297a21e",
+          "positionX": 20.0,
+          "positionY": 132.0,
+          "scale": 0.800000011920929,
+          "title": "To create equivalent items without the children, create a new item and select the existing one from the suggestion list while typing.",
+          "width": 300.0
+        },
+        {
+          "bodyHeight": 157.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:33e944d4-ff80-403c-b5d6-395806566be4",
+          "parentId": "urn:imapping:b71b175e-ff29-43a0-a580-c88d9297a21e",
+          "positionX": 20.0,
+          "positionY": 237.0,
+          "scale": 0.8,
+          "title": "If you move or remove children in one equivalent, they will still remain in others.",
+          "width": 300.0
+        },
+        {
+          "bodyHeight": 159.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:4c0e628c-c7f5-489b-9958-1c6e7ae1dc33",
+          "parentId": "urn:imapping:b71b175e-ff29-43a0-a580-c88d9297a21e",
+          "positionX": 20.0,
+          "positionY": 78.0,
+          "scale": 0.8,
+          "title": "To create such \u201cequivalent\u201d items with all the same child items, select it, press Ctrl+C click at the desired position and press Ctrl+V.",
+          "width": 300.0
+        },
+        {
+          "bodyHeight": 161.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 64.0,
+          "id": "urn:imapping:b72aea7d-7f07-40e6-82b9-3074f3d43686",
+          "parentId": "urn:imapping:b71b175e-ff29-43a0-a580-c88d9297a21e",
+          "positionX": 20.0,
+          "positionY": 9.0,
+          "scale": 0.8,
+          "title": "You can have one and the same logical item occur in several places in the map. If you change the text in one, it will change in all of them.",
+          "width": 300.0
+        },
+        {
+          "bodyHeight": 157.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:faac4137-369a-491d-a077-e91bb9535a70",
+          "parentId": "urn:imapping:b71b175e-ff29-43a0-a580-c88d9297a21e",
+          "positionX": 20.0,
+          "positionY": 201.0,
+          "scale": 0.8,
+          "title": "With Ctrl+E, you can jump to equivalents of an item, if there are any.",
+          "width": 300.0
+        },
+        {
+          "bodyHeight": 101.0,
+          "childrenIds": [
+            "urn:imapping:33fe7505-6cba-4f3c-9a59-bd911a275621",
+            "urn:imapping:e9e1eeb3-8fbb-4dff-96a5-9121a8ba0c9c",
+            "urn:imapping:16e0cee9-0456-4c10-aade-904d52481726"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:6d0ebd23-338b-45ed-940b-dabe1b998fcf",
+          "parentId": "urn:imapping:b71b175e-ff29-43a0-a580-c88d9297a21e",
+          "positionX": 20.0,
+          "positionY": 273.0,
+          "scale": 0.5635467980295567,
+          "title": "Example",
+          "width": 300.0
+        },
+        {
+          "bodyHeight": 156.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 64.0,
+          "id": "urn:imapping:33fe7505-6cba-4f3c-9a59-bd911a275621",
+          "parentId": "urn:imapping:6d0ebd23-338b-45ed-940b-dabe1b998fcf",
+          "positionX": 20.0,
+          "positionY": 12.0,
+          "scale": 0.8,
+          "title": "Below, you see two equivalent Items named \u201cEddy\u201d in two different contexts. Although they have different children and links in the two contexts, in QuiKey (the search tool that you get with Ctrl+F), you can see that there is only one Eddy item, which unites all properties of the two.",
+          "width": 490.0
+        },
+        {
+          "bodyHeight": 65.0,
+          "childrenIds": [
+            "urn:imapping:c37a10dc-6814-464a-9822-6071dbb04269",
+            "urn:imapping:3605e164-727e-48d0-895d-96cacdd1611c"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:e9e1eeb3-8fbb-4dff-96a5-9121a8ba0c9c",
+          "parentId": "urn:imapping:6d0ebd23-338b-45ed-940b-dabe1b998fcf",
+          "positionX": 140.0,
+          "positionY": 87.0,
+          "scale": 0.6,
+          "title": "Private",
+          "width": 190.0
+        },
+        {
+          "bodyHeight": 41.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:c37a10dc-6814-464a-9822-6071dbb04269",
+          "parentId": "urn:imapping:e9e1eeb3-8fbb-4dff-96a5-9121a8ba0c9c",
+          "positionX": 220.0,
+          "positionY": 12.0,
+          "scale": 0.8,
+          "title": "Sarah",
+          "width": 80.0
+        },
+        {
+          "bodyHeight": 59.0,
+          "childrenIds": [
+            "urn:imapping:b8eaa4c9-5f40-4a1b-893c-cc304130b1c6"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:3605e164-727e-48d0-895d-96cacdd1611c",
+          "parentId": "urn:imapping:e9e1eeb3-8fbb-4dff-96a5-9121a8ba0c9c",
+          "positionX": 30.0,
+          "positionY": 12.0,
+          "scale": 0.6537598204264872,
+          "title": "Eddy",
+          "width": 120.0
+        },
+        {
+          "bodyHeight": 47.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:b8eaa4c9-5f40-4a1b-893c-cc304130b1c6",
+          "parentId": "urn:imapping:3605e164-727e-48d0-895d-96cacdd1611c",
+          "positionX": 60.0,
+          "positionY": 48.0,
+          "scale": 0.8,
+          "title": "012-34567",
+          "width": 100.0
+        },
+        {
+          "bodyHeight": 65.0,
+          "childrenIds": [
+            "urn:imapping:72ea65dd-bbae-4610-b59f-f217429f4375"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:16e0cee9-0456-4c10-aade-904d52481726",
+          "parentId": "urn:imapping:6d0ebd23-338b-45ed-940b-dabe1b998fcf",
+          "positionX": 20.0,
+          "positionY": 87.0,
+          "scale": 0.7200000000000001,
+          "title": "Work",
+          "width": 100.0
+        },
+        {
+          "bodyHeight": 50.0,
+          "childrenIds": [
+            "urn:imapping:bdbf0763-86aa-4a3e-a422-081494d98e22"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:72ea65dd-bbae-4610-b59f-f217429f4375",
+          "parentId": "urn:imapping:16e0cee9-0456-4c10-aade-904d52481726",
+          "positionX": 20.0,
+          "positionY": 9.0,
+          "scale": 0.6222222222222222,
+          "title": "Eddy",
+          "width": 100.0
+        },
+        {
+          "bodyHeight": 40.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:bdbf0763-86aa-4a3e-a422-081494d98e22",
+          "parentId": "urn:imapping:72ea65dd-bbae-4610-b59f-f217429f4375",
+          "positionX": 50.0,
+          "positionY": 48.0,
+          "scale": 0.8,
+          "title": "Project x",
+          "width": 90.0
+        },
+        {
+          "bodyHeight": 176.0,
+          "childrenIds": [
+            "urn:imapping:e5627bdb-c811-4195-b133-98d1116ce458",
+            "urn:imapping:34219841-664c-4f58-baab-71a343c35916"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:3e1b3ad5-2822-4bd4-b44f-d8ec649d2488",
+          "parentId": "urn:imapping:07a367ca-aba0-45f7-b5c5-4d86cc53ab90",
+          "positionX": 30.0,
+          "positionY": 228.0,
+          "scale": 0.9708135240208856,
+          "title": "Rapid Entry",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 66.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:e5627bdb-c811-4195-b133-98d1116ce458",
+          "parentId": "urn:imapping:3e1b3ad5-2822-4bd4-b44f-d8ec649d2488",
+          "positionX": 20.0,
+          "positionY": 117.0,
+          "scale": 0.8,
+          "title": "With Ctrl+Shift+Enter, you create a new child item inside the one that is currently selected.",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 156.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 96.0,
+          "id": "urn:imapping:34219841-664c-4f58-baab-71a343c35916",
+          "parentId": "urn:imapping:3e1b3ad5-2822-4bd4-b44f-d8ec649d2488",
+          "positionX": 20.0,
+          "positionY": 12.0,
+          "scale": 0.8,
+          "title": "To enter multiple items rapidly after each other, e.g. for brainstorming, you can press Ctrl+Enter instead of only Enter to submit the item you are editing and directly create a new one just below.",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 180.0,
+          "childrenIds": [
+            "urn:imapping:01c4e87b-9bd5-4ae4-ab6a-a79217aaa6ea",
+            "urn:imapping:32af18b5-2d7c-4278-ac07-4744407752ef",
+            "urn:imapping:47c7eccb-ba84-4ac7-9e86-8c8e67235804"
+          ],
+          "color": "#B0EAE6",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:2fb7eae9-3eef-40fd-9ae7-b28fb31dbc84",
+          "parentId": "urn:imapping:07a367ca-aba0-45f7-b5c5-4d86cc53ab90",
+          "positionX": 30.0,
+          "positionY": 24.0,
+          "scale": 0.972419001108133,
+          "title": "Deleting Items",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 49.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:01c4e87b-9bd5-4ae4-ab6a-a79217aaa6ea",
+          "parentId": "urn:imapping:2fb7eae9-3eef-40fd-9ae7-b28fb31dbc84",
+          "positionX": 20.0,
+          "positionY": 12.0,
+          "scale": 0.48462608456611633,
+          "title": "To remove an item or link, select it and press Delete or Backspace.",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 160.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 80.0,
+          "id": "urn:imapping:32af18b5-2d7c-4278-ac07-4744407752ef",
+          "parentId": "urn:imapping:2fb7eae9-3eef-40fd-9ae7-b28fb31dbc84",
+          "positionX": 20.0,
+          "positionY": 51.0,
+          "scale": 0.8,
+          "title": "The Item will be removed from the current parent item. However, if equivalents of this item exist, they will not be deleted unless you explicitly say so in the dialog.",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 46.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#B0EAE6",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:47c7eccb-ba84-4ac7-9e86-8c8e67235804",
+          "parentId": "urn:imapping:2fb7eae9-3eef-40fd-9ae7-b28fb31dbc84",
+          "positionX": 20.0,
+          "positionY": 138.0,
+          "scale": 0.8,
+          "title": "You can also erase items directly by pressing Ctrl+Del or Ctrl+Backspace.",
+          "width": 240.0
+        },
+        {
+          "backgroundImage": "5a5380f2e1d9614ca89befd9",
+          "bodyHeight": 299.0,
+          "childrenIds": [
+            "urn:imapping:c1911a42-e82c-4e35-9e12-325228c8c6fc",
+            "urn:imapping:f1460479-a398-4665-916b-30f1ee341807",
+            "urn:imapping:24d89f17-3796-4da3-bd93-4c5511117aa2",
+            "urn:imapping:6311b2c0-db79-4c0d-b8b2-abc2dbb574b0",
+            "urn:imapping:489e7d5f-aefb-4945-8009-361729314e16",
+            "urn:imapping:52ba424c-4f0a-4671-a837-e1d405e358b5"
+          ],
+          "color": "#BFF5B9",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:da1e5bc0-3a29-4487-9dc0-d1ab66dd3093",
+          "parentId": "urn:imapping/root",
+          "positionX": 20.0,
+          "positionY": 129.0,
+          "scale": 0.7271484375000001,
+          "title": "How to get help",
+          "width": 230.0
+        },
+        {
+          "bodyHeight": 34.0,
+          "childrenIds": [
+            "urn:imapping:4551f5a6-5cc1-4325-92a1-3a1657ee9bc7"
+          ],
+          "color": "#BFF5B9",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:c1911a42-e82c-4e35-9e12-325228c8c6fc",
+          "parentId": "urn:imapping:da1e5bc0-3a29-4487-9dc0-d1ab66dd3093",
+          "positionX": 20.0,
+          "positionY": 327.0,
+          "scale": 0.9737635429544845,
+          "title": "If you have questions or feedback, feel free to contact us:",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 101.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#BFF5B9",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:4551f5a6-5cc1-4325-92a1-3a1657ee9bc7",
+          "parentId": "urn:imapping:c1911a42-e82c-4e35-9e12-325228c8c6fc",
+          "positionX": 20.0,
+          "positionY": 6.0,
+          "scale": 0.8,
+          "title": "support@imapping.info",
+          "width": 240.0
+        },
+        {
+          "bodyHeight": 157.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#BFF5B9",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:f1460479-a398-4665-916b-30f1ee341807",
+          "parentId": "urn:imapping:da1e5bc0-3a29-4487-9dc0-d1ab66dd3093",
+          "positionX": 20.0,
+          "positionY": 78.0,
+          "scale": 0.8,
+          "title": "Read this start map \u2013 it explains most of what you can do.",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 35.0,
+          "childrenIds": [
+            "urn:imapping:348c2b68-b78b-4966-a255-1360c3c3323b"
+          ],
+          "color": "#BFF5B9",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:24d89f17-3796-4da3-bd93-4c5511117aa2",
+          "parentId": "urn:imapping:da1e5bc0-3a29-4487-9dc0-d1ab66dd3093",
+          "positionX": 20.0,
+          "positionY": 270.0,
+          "scale": 0.8654778363991396,
+          "title": "Check our Frequently Asked Questions:",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 38.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#BFF5B9",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:348c2b68-b78b-4966-a255-1360c3c3323b",
+          "parentId": "urn:imapping:24d89f17-3796-4da3-bd93-4c5511117aa2",
+          "positionX": 20.0,
+          "positionY": 9.0,
+          "scale": 0.800000011920929,
+          "title": " http://www.imapping.info/support/faq/",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 61.0,
+          "childrenIds": [
+            "urn:imapping:4d5daf48-1f23-42b5-8ddd-db4d66fca7ee",
+            "urn:imapping:d7ae8dc6-bf0a-419d-b032-41f5030fcad8"
+          ],
+          "color": "#BFF5B9",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:6311b2c0-db79-4c0d-b8b2-abc2dbb574b0",
+          "parentId": "urn:imapping:da1e5bc0-3a29-4487-9dc0-d1ab66dd3093",
+          "positionX": 20.0,
+          "positionY": 171.0,
+          "scale": 0.7703703703703705,
+          "title": "Use the help page that you get in the Help menu or by pressing H.",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 76.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#BFF5B9",
+          "headerHeight": 32.0,
+          "id": "urn:imapping:4d5daf48-1f23-42b5-8ddd-db4d66fca7ee",
+          "parentId": "urn:imapping:6311b2c0-db79-4c0d-b8b2-abc2dbb574b0",
+          "positionX": 20.0,
+          "positionY": 12.0,
+          "scale": 0.800000011920929,
+          "title": "You can also get a printable german version of the help sheet here:",
+          "width": 310.0
+        },
+        {
+          "bodyHeight": 74.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#BFF5B9",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:d7ae8dc6-bf0a-419d-b032-41f5030fcad8",
+          "parentId": "urn:imapping:6311b2c0-db79-4c0d-b8b2-abc2dbb574b0",
+          "positionX": 20.0,
+          "positionY": 48.0,
+          "scale": 0.800000011920929,
+          "title": " http://www.imapping.info/spickzettel-furs-imapping-tool/",
+          "width": 310.0
+        },
+        {
+          "bodyHeight": 44.0,
+          "childrenIds": [
+            "urn:imapping:a506c575-5ccb-4bc7-9d50-bc8558d5dab0",
+            "urn:imapping:c48c97d6-5a8b-4288-9696-d99ca1dbfbee"
+          ],
+          "color": "#BFF5B9",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:489e7d5f-aefb-4945-8009-361729314e16",
+          "parentId": "urn:imapping:da1e5bc0-3a29-4487-9dc0-d1ab66dd3093",
+          "positionX": 20.0,
+          "positionY": 12.0,
+          "scale": 0.8712125217391302,
+          "title": "Check out the introduction videos",
+          "width": 270.0
+        },
+        {
+          "bodyHeight": 99.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#BFF5B9",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:a506c575-5ccb-4bc7-9d50-bc8558d5dab0",
+          "parentId": "urn:imapping:489e7d5f-aefb-4945-8009-361729314e16",
+          "positionX": 18.0,
+          "positionY": 5.0,
+          "scale": 0.800000011920929,
+          "title": " http://videos.imapping.info/",
+          "width": 271.48764129642626
+        },
+        {
+          "bodyHeight": 57.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#BFF5B9",
+          "headerHeight": 16.0,
+          "id": "urn:imapping:c48c97d6-5a8b-4288-9696-d99ca1dbfbee",
+          "parentId": "urn:imapping:489e7d5f-aefb-4945-8009-361729314e16",
+          "positionX": 18.0,
+          "positionY": 25.0,
+          "scale": 0.800000011920929,
+          "title": "Click the link-icon above to get there!",
+          "width": 271.21010258977213
+        },
+        {
+          "bodyHeight": 81.0,
+          "childrenIds": [],
+          "collapsed": true,
+          "color": "#BFF5B9",
+          "headerHeight": 48.0,
+          "id": "urn:imapping:52ba424c-4f0a-4671-a837-e1d405e358b5",
+          "parentId": "urn:imapping:da1e5bc0-3a29-4487-9dc0-d1ab66dd3093",
+          "positionX": 20.0,
+          "positionY": 117.0,
+          "scale": 0.8,
+          "title": "Explore the menus \u2013 you will find more features there (e.g. colors, images, settings...). Also try the right-click menu.",
+          "width": 270.0
+        }
+      ],
+      "root": "urn:imapping/root",
+      "view": {}
+    }'}
+  - expected_status: [200]
+  - validators:
+    - extract_test: {jsonpath_mini: "id", test: "exists"}

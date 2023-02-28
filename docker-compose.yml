@@ -1,0 +1,41 @@
+version: "3"
+services:
+
+  backend:
+    # build: "./backend/"
+    image: "registry.awesome-it.de/infinity/backend:2.32.1"
+    restart: unless-stopped
+    labels:
+      - "traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/api`, `/socket.io`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+    environment:
+      MONGO_HOST: mongodb
+      MONGO_PORT: "27017"
+      MONGO_DATABASE: "infinity"
+      JWT_TTL: "999999999"
+      JWT_SECRET: "SAFW%&BTRDYV6f8^B&$DY%DJKJOL(UIUHJD%RR%^#46%yrdt%68edH"
+
+  frontend:
+    # build: "./frontend/"
+    image: "registry.awesome-it.de/infinity/frontend:2.32.1"
+    restart: unless-stopped
+    labels:
+      - "traefik.http.routers.frontend.rule=Host(`localhost`) && !PathPrefix(`/api`, `/socket.io`)"
+
+  mongodb:
+    image: "mongo:4.2.21"
+    restart: unless-stopped
+    command: "--wiredTigerCacheSizeGB=1 --logpath=/dev/stdout"
+    volumes:
+      - ./data:/data/db
+
+  traefik:
+    image: traefik
+    restart: unless-stopped
+    command: --api.insecure=true --providers.docker
+    ports:
+      - '8500:80'
+      - '8081:8080' # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+

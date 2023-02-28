@@ -1,0 +1,698 @@
+image: "registry.awesome-it.de/upstream-dockerhub/library/docker:git"
+
+stages:
+  - lint
+  - audit
+  - test
+  - build
+  - e2e
+  - package
+  - deploy
+  - inform
+  - cleanup
+
+variables:
+  REGISTRY: registry.awesome-it.de
+  HELM_VERSION: 3.7.1
+  # DO NOT PLACE DEBUG VARIABLE HERE: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/3068
+
+.when:
+  only:
+    refs:
+      - master
+      - /[0-9]+\.[0-9]+\.[0-9]+(-\w+)?/
+      - merge_requests
+      - /^deploy\/.*$/
+
+.helm:
+  extends: .when
+  image: "registry.awesome-it.de/upstream-dockerhub/library/alpine:latest"
+  before_script:
+    - apk add --no-cache ca-certificates
+    - KUBECTL_VERSION=$( wget -O - https://storage.googleapis.com/kubernetes-release/release/stable.txt )
+    - wget https://storage.googleapis.com/kubernetes-release/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl
+    - chmod +x ./kubectl
+    - wget https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz
+    - tar -xf helm-v${HELM_VERSION}-linux-amd64.tar.gz
+    - mv linux-amd64/helm ./
+    - export PATH="./:$PATH"
+    - helm repo add bitnami https://charts.bitnami.com/bitnami
+  tags:
+    - deploy
+    - k8s
+  dependencies: []
+  stage: deploy
+
+.frontend:
+  extends: .when
+  before_script:
+    - cd frontend
+
+.frontend-npm:
+  extends: .frontend
+  image: "registry.awesome-it.de/upstream-dockerhub/library/node:16-alpine"
+  cache:
+    key: node-modules-frontend
+    paths:
+      - /root/.npm/**/*
+
+.backend:
+  extends: .when
+  before_script:
+    - cd backend
+
+.backend-npm:
+  extends: .backend
+  image: "registry.awesome-it.de/upstream-dockerhub/library/node:16-alpine"
+  cache:
+    key: node-modules-backend
+    paths:
+      - /root/.npm/**/*
+
+.deploy:
+  extends: .helm
+  stage: deploy
+  dependencies: []
+
+.inform:
+  stage: inform
+  image: "registry.awesome-it.de/upstream-dockerhub/library/alpine:latest"
+  before_script:
+    - apk add curl
+
+
+lint-docker-frontend:
+  extends: .frontend
+  stage: lint
+  image: "registry.awesome-it.de/upstream-dockerhub/hadolint/hadolint:latest-debian"
+  script:
+    - /bin/hadolint Dockerfile
+  only:
+    changes:
+      - frontend/Dockerfile
+
+lint-docker-backend:
+  extends: .backend
+  stage: lint
+  image: "registry.awesome-it.de/upstream-dockerhub/hadolint/hadolint:latest-debian"
+  script:
+    - /bin/hadolint Dockerfile
+  only:
+    changes:
+      - backend/Dockerfile
+
+lint-frontend:
+  extends: .frontend-npm
+  stage: lint
+  script:
+    - if grep "material-ui/[^/]*'$" src -Rl ; then echo 'Do not import material ui through root' ; false ; fi
+    - npm ci
+    - npm run genversion
+    - npm run lint-js
+  only:
+    changes:
+      - frontend/**/*
+
+lint-frontend-ts:
+  extends: .frontend-npm
+  stage: lint
+  script:
+    - npm ci
+    - npm run lint-ts
+  only:
+    changes:
+      - frontend/**/*
+
+lint-backend:
+  extends: .backend-npm
+  stage: lint
+  script:
+    - npm ci
+    - npm run lint
+  only:
+    changes:
+      - backend/**/*
+
+
+lint-chart:
+  extends: .helm
+  stage: lint
+  script:
+    - ./helm lint ./chart
+    - ./helm template ./chart | kubectl create -f - --dry-run=client --validate=true
+  only:
+    changes:
+      - chart/**/*
+
+
+audit-frontend:
+  extends: .frontend-npm
+  stage: audit
+  script:
+    - npm ci
+    - npm audit
+  allow_failure: true
+  needs: []
+
+audit-backend:
+  extends: .backend-npm
+  stage: audit
+  script:
+    - npm ci
+    - npm audit
+  allow_failure: true
+  needs: []
+
+
+test-frontend:
+  extends: .frontend-npm
+  stage: test
+  script:
+    # install backend too, as jest uses the backend node_modules directory to resolve modules from the shared folder
+    - cd ../backend
+    - npm ci
+    - cd ../frontend
+    - npm ci
+    - npm run genversion
+    - DEBUG="app:*" npm run test
+  artifacts:
+    reports:
+      junit: ./frontend/junit.xml
+  coverage: /All\sfiles.*?\s+(\d+.\d+)/
+  needs: []
+  only:
+    changes:
+      - frontend/**/*
+
+test-backend:
+  extends: .backend-npm
+  stage: test
+  services:
+    - name: "registry.awesome-it.de/upstream-dockerhub/library/mongo:4.2.8"
+      alias: mongo
+  variables:
+    MONGO_HOST: "mongo"
+    MONGO_PORT: "27017"
+  script:
+    - npm ci
+    - DEBUG="infinity:*" npm run test
+  artifacts:
+    reports:
+      junit: ./backend/junit.xml
+  coverage: /All\sfiles.*?\s+(\d+.\d+)/
+  needs: []
+  only:
+    changes:
+      - backend/**/*
+
+
+build-frontend:
+  extends: .frontend-npm
+  stage: build
+  script:
+    - |
+      if [[ "${CI_COMMIT_REF_NAME}" != "${CI_COMMIT_REF_NAME/deploy/}" ]] ; then
+        VERSION="0.0.0-${CI_COMMIT_SHORT_SHA}+$(date '+%Y%m%d%H%M')"
+      else
+        VERSION=${CI_COMMIT_TAG:-0.0.0-${CI_COMMIT_SHORT_SHA}+$(date '+%Y%m%d%H%M')}
+      fi
+    - 'sed "s/\"version\":[^,]*/\"version\": \"${VERSION}\"/" -i package.json'
+    - npm ci
+    # disable the source maps, to hide our code, see https://create-react-app.dev/docs/advanced-configuration/
+    - GENERATE_SOURCEMAP=false npm run build
+    # make sure the build was successful and all files have been created
+    - ls build/index.html
+  artifacts:
+    paths:
+      - frontend/build
+    expire_in: 1 day
+  needs: []
+
+build-backend:
+  extends: .backend-npm
+  stage: build
+  script:
+    - |
+      if [[ "${CI_COMMIT_REF_NAME}" != "${CI_COMMIT_REF_NAME/deploy/}" ]] ; then
+        VERSION=0.0.0-${CI_COMMIT_SHORT_SHA}+$(date '+%Y%m%d%H%M')
+      else
+        VERSION=${CI_COMMIT_TAG:-0.0.0-${CI_COMMIT_SHORT_SHA}+$(date '+%Y%m%d%H%M')}
+      fi
+    - 'sed "s/\"version\":[^,]*/\"version\": \"${VERSION}\"/" -i package.json'
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - backend/build
+    expire_in: 1 day
+  needs: []
+
+# TODO: crashes browser tab when running in gitlab runner environment,
+#       or reports 'Failed to load resource: net::ERR_INSUFFICIENT_RESOURCES' when run manually in gitlab runner
+#       works fine from docker-compose on the same machine
+#e2e-test:
+#  extends: .when
+#  stage: e2e
+#  image: "registry.awesome-it.de/upstream-dockerhub/library/node:16-alpine"
+#  variables:
+#    # Enable network connection between services
+#    # See https://stackoverflow.com/a/62804104/381166
+#    FF_NETWORK_PER_BUILD: "1"
+#    # selenium/chrom and e2e-test config
+#    HUB_HOST: selenium-hub
+#    HUB_PORT: "4444"
+#    # e2e-test config
+#    TARGET_HOST: build
+#    TARGET_PORT: "3001"
+#    # backend config
+#    MONGO_HOST: mongo
+#    # change the save to read only interval to speedup tests, used in tests and backend
+#    SAVE_TO_DATABASE_INTERVAL: "0"
+#  services:
+#    - name: "registry.awesome-it.de/upstream-dockerhub/library/mongo:4.2.8"
+#      alias: mongo
+#    - name: "registry.awesome-it.de/upstream-dockerhub/selenium/hub:3.141.59"
+#      alias: selenium-hub
+#    - name: "registry.awesome-it.de/upstream-dockerhub/selenium/node-chrome-debug:3.141.59"
+#      alias: selenium-chrome
+#  before_script:
+#    # start the backend
+#    - cd backend
+#    - npm ci --only=production
+#    - (DEBUG="infinity:*" PORT=${TARGET_PORT} node build/index.js &) && BACKEND_PID=$!
+#    # wait for database
+#    - ./../e2e/wait-for-it.sh mongo:27017
+#    # create a user
+#    - npx babel-node ./src/scripts/createUser.js admin admin@example.com admin administrator,customer
+#    # install the test env
+#    - cd ../e2e
+#    - npm ci
+#    # wait for selenium
+#    - ./wait-for-it.sh ${HUB_HOST}:${HUB_PORT}
+#    # wait for backend
+#    - ./wait-for-it.sh ${HOSTNAME}:${TARGET_PORT}
+#  script:
+#    # test configuration
+#    - export SELENIUM_HUB_ADDRESS=http://${HUB_HOST}:${HUB_PORT}/wd/hub
+#    - export TARGET_URL=http://${TARGET_HOST}:${TARGET_PORT}
+#    - DEBUG="infinity:*" npm run test
+#  after_script:
+#    - '[ -n "$BACKEND_PID" ] && kill -9 "$BACKEND_PID"'
+#  artifacts:
+#    reports:
+#      junit: ./e2e/junit.xml
+#  needs:
+#    - build-backend
+#    - build-frontend
+#  tags:
+#    - deploy
+#    - k8s
+
+
+package-frontend:
+  extends: .frontend
+  stage: package
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - echo "{\"auths\":{\"$REGISTRY\":{\"username\":\"$DOCKER_USERNAME\",\"password\":\"$DOCKER_PASSWORD\"}}}"
+      > /kaniko/.docker/config.json
+    - |
+      if [[ -n "${CI_MERGE_REQUEST_IID}" ]] ; then
+        TAG=${CI_MERGE_REQUEST_IID}
+        NAME="frontend-merge"
+      elif [[ "${CI_COMMIT_REF_NAME}" != "${CI_COMMIT_REF_NAME/deploy/}" ]] ; then
+        TAG=${CI_COMMIT_SHORT_SHA}
+        NAME="frontend-branch"
+      else
+        TAG=${CI_COMMIT_REF_NAME/master/latest}
+        NAME="frontend"
+      fi
+    - /kaniko/executor
+      --context "$CI_PROJECT_DIR/frontend"
+      --dockerfile Dockerfile
+      --destination "$REGISTRY/infinity/$NAME:$TAG"
+
+package-backend:
+  extends: .backend
+  stage: package
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - echo "{\"auths\":{\"$REGISTRY\":{\"username\":\"$DOCKER_USERNAME\",\"password\":\"$DOCKER_PASSWORD\"}}}"
+      > /kaniko/.docker/config.json
+    - |
+      if [[ -n "${CI_MERGE_REQUEST_IID}" ]] ; then
+        TAG=${CI_MERGE_REQUEST_IID}
+        NAME="backend-merge"
+      elif [[ "${CI_COMMIT_REF_NAME}" != "${CI_COMMIT_REF_NAME/deploy/}" ]] ; then
+        TAG=${CI_COMMIT_SHORT_SHA}
+        NAME="backend-branch"
+      else
+        TAG=${CI_COMMIT_REF_NAME/master/latest}
+        NAME="backend"
+      fi
+    - /kaniko/executor
+      --context "$CI_PROJECT_DIR/backend"
+      --dockerfile Dockerfile
+      --destination "$REGISTRY/infinity/$NAME:$TAG"
+
+
+deploy-dev:
+  extends: .deploy
+  script:
+    - ./helm upgrade inf-dev ./chart --install --atomic --wait --debug --namespace inf-dev-app
+      --values "./deploy/dev-values.yaml"
+      --set "backend.replicaCount=1"
+      --set "backend.annotations.version=$CI_COMMIT_SHA"
+      --set "frontend.replicaCount=1"
+      --set "frontend.annotations.version=$CI_COMMIT_SHA"
+  only:
+    refs:
+      - master
+  environment:
+    name: dev
+    url: https://dev.infinitymaps.io
+
+deploy-qa:
+  extends: .deploy
+  script:
+    - ./helm upgrade inf-qa ./chart --install --atomic --wait --debug --namespace inf-prod-app
+      --values "./deploy/prod-values.yaml"
+      --set "backup.enabled=false"
+      --set "backend.image.tag=$CI_COMMIT_REF_NAME"
+      --set "backend.annotations.version=$CI_COMMIT_SHA"
+      --set "backend.ingress.hosts[0].host=test.infinitymaps.io"
+      --set "backend.ingress.tls[0].secretName=test.infinitymaps.io"
+      --set "backend.ingress.tls[0].hosts[0]=test.infinitymaps.io"
+      --set "backend.config.env.DOCS_SERVICE_URL=http://inf-test-docs-image-creation/image"
+      --set "backend.config.env.PDF_SERVICE_URL=http://inf-test-pdf-image-creation/image"
+      --set "backend.config.env.HTML_SERVICE_URL=http://inf-test-html-image-creation/image"
+      --set "backend.config.env.RESIZE_SERVICE_URL=http://inf-test-resize-image-creation/image"
+      --set "frontend.image.tag=$CI_COMMIT_REF_NAME"
+      --set "frontend.annotations.version=$CI_COMMIT_SHA"
+      --set "frontend.ingress.hosts[0].host=test.infinitymaps.io"
+      --set "frontend.ingress.tls[0].secretName=test.infinitymaps.io"
+      --set "frontend.ingress.tls[0].hosts[0]=test.infinitymaps.io"
+  only:
+    # only for tags with version number
+    refs:
+      - /[0-9]+\.[0-9]+\.[0-9]+(-\w+)?/
+  environment:
+    name: qa
+    url: https://test.infinitymaps.io
+
+deploy-prod:
+  extends: .deploy
+  script:
+    - ./helm upgrade inf-prod ./chart --install --atomic --wait --debug --namespace inf-prod-app
+      --values "./deploy/prod-values.yaml"
+      --set "backend.image.tag=$CI_COMMIT_REF_NAME"
+      --set "backend.annotations.version=$CI_COMMIT_SHA"
+      --set "frontend.image.tag=$CI_COMMIT_REF_NAME"
+      --set "frontend.annotations.version=$CI_COMMIT_SHA"
+  only:
+    # only for tags with version number
+    refs:
+      - /[0-9]+\.[0-9]+\.[0-9]+(-\w+)?/
+  when: manual
+  environment:
+    name: prod
+    url: https://app.infinitymaps.io
+
+deploy-merge:
+  extends: .deploy
+  script:
+    - ./helm upgrade inf-merge-${CI_MERGE_REQUEST_IID} ./chart --install --atomic --wait --debug --namespace inf-dev-app
+      --values "./deploy/dev-values.yaml"
+      --set "backend.replicaCount=1"
+      --set "backend.image.tag=$CI_MERGE_REQUEST_IID"
+      --set "backend.image.repository=registry.awesome-it.de/infinity/backend-merge"
+      --set "backend.annotations.version=$CI_COMMIT_SHA"
+      --set "backend.ingress.hosts[0].host=dev-merge-${CI_MERGE_REQUEST_IID}.infinitymaps.io"
+      --set "backend.ingress.tls[0].secretName=dev-merge-${CI_MERGE_REQUEST_IID}.infinitymaps.io"
+      --set "backend.ingress.tls[0].hosts[0]=dev-merge-${CI_MERGE_REQUEST_IID}.infinitymaps.io"
+      --set "frontend.replicaCount=1"
+      --set "frontend.image.tag=$CI_MERGE_REQUEST_IID"
+      --set "frontend.image.repository=registry.awesome-it.de/infinity/frontend-merge"
+      --set "frontend.annotations.version=$CI_COMMIT_SHA"
+      --set "frontend.ingress.hosts[0].host=dev-merge-${CI_MERGE_REQUEST_IID}.infinitymaps.io"
+      --set "frontend.ingress.tls[0].secretName=dev-merge-${CI_MERGE_REQUEST_IID}.infinitymaps.io"
+      --set "frontend.ingress.tls[0].hosts[0]=dev-merge-${CI_MERGE_REQUEST_IID}.infinitymaps.io"
+  only:
+    refs:
+      - merge_requests
+  environment:
+    name: review/merge-${CI_MERGE_REQUEST_IID}
+    url: https://dev-merge-${CI_MERGE_REQUEST_IID}.infinitymaps.io
+    on_stop: cleanup-merge
+    auto_stop_in: 1 month
+
+deploy-branch:
+  extends: .deploy
+  script:
+    - ./helm upgrade inf-branch-${CI_COMMIT_REF_SLUG} ./chart --install --atomic --wait --debug --namespace inf-dev-app
+      --values "./deploy/dev-values.yaml"
+      --set "backend.replicaCount=1"
+      --set "backend.image.tag=$CI_COMMIT_SHORT_SHA"
+      --set "backend.image.repository=registry.awesome-it.de/infinity/backend-branch"
+      --set "backend.annotations.version=$CI_COMMIT_SHA"
+      --set "backend.ingress.hosts[0].host=branch-${CI_COMMIT_REF_SLUG}.infinitymaps.io"
+      --set "backend.ingress.tls[0].secretName=branch-${CI_COMMIT_REF_SLUG}.infinitymaps.io"
+      --set "backend.ingress.tls[0].hosts[0]=branch-${CI_COMMIT_REF_SLUG}.infinitymaps.io"
+      --set "frontend.replicaCount=1"
+      --set "frontend.image.tag=$CI_COMMIT_SHORT_SHA"
+      --set "frontend.image.repository=registry.awesome-it.de/infinity/frontend-branch"
+      --set "frontend.annotations.version=$CI_COMMIT_SHA"
+      --set "frontend.ingress.hosts[0].host=branch-${CI_COMMIT_REF_SLUG}.infinitymaps.io"
+      --set "frontend.ingress.tls[0].secretName=branch-${CI_COMMIT_REF_SLUG}.infinitymaps.io"
+      --set "frontend.ingress.tls[0].hosts[0]=branch-${CI_COMMIT_REF_SLUG}.infinitymaps.io"
+  only:
+    refs:
+      - /^deploy\/.*$/
+  environment:
+    name: review/branch-${CI_COMMIT_REF_SLUG}
+    url: https://branch-${CI_COMMIT_REF_SLUG}.infinitymaps.io
+    on_stop: cleanup-branch
+    auto_stop_in: 3 months
+
+
+inform-slack-dev:
+  extends: .inform
+  script:
+    - set -ex
+    - apk add git
+    - |
+      function get_pipeline() {
+        IID="$1"
+        curl -s --header "PRIVATE-TOKEN: ${API_TOKEN}" \
+          "https://gitlab.awesome-it.de/api/v4/projects/${CI_PROJECT_ID}/pipelines/${IID}"
+      }
+
+      function get_sha() {
+        CIID=$1
+        while true ; do
+          CIID=$(( $CIID - 1 ))
+          OUTPUT=$( get_pipeline "$CIID" )
+          if echo $OUTPUT | grep -q '"status":"success"' && echo $OUTPUT | grep -q '"ref":"master"' ; then
+            break
+          fi
+          if [[ $CIID -lt 3000 ]] ; then
+            echo "ERROR: could not find any pipeline" >> /dev/stderr
+            exit 1
+          fi
+        done
+        echo "$OUTPUT" | sed 's/.*"sha":"\([0-9a-f]*\)".*/\1/'
+      }
+    - >
+      LAST_PIPELINE_SHA="$( get_sha "${CI_PIPELINE_ID}" )"
+    - >
+      MESSAGES="$(
+      git log --oneline ${LAST_PIPELINE_SHA}..${CI_COMMIT_SHA} |
+      sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g' |
+      sed 's/"/\\"/g'
+      )"
+    - >
+      COVERAGE="$( get_pipeline "${CI_PIPELINE_ID}" | sed 's/.*"coverage":"\?\(\([0-9.]*\|null\)\).*/\1/' )"
+    - >
+      curl -X POST -H 'Content-Type: application/json' --fail
+      --data
+      '{
+        "username":"Infinity Deploy Hook Master",
+        "icon_emoji":":fire:",
+        "text":"<https://dev.infinitymaps.io|master deployed successfully>",
+        "attachments": [
+          {
+          "fallback":"Commit messages since last deployment - change log",
+          "pretext":"Commit messages since last deployment - change log",
+          "text":"'"${MESSAGES}"'",
+          "color":"#8067A9"
+          },
+          {
+          "fallback":"Coverage '"${COVERAGE/null/no coverage value}"' %",
+          "pretext":"<https://gitlab.awesome-it.de/infinity/app/-/pipelines/'${CI_PIPELINE_ID}'|Test coverage>",
+          "text":"Coverage: '"${COVERAGE/null/no coverage value}"' %",
+          "color":"#8067A9"
+          }
+        ]
+      }'
+      "$SLACK_URL"
+  only:
+    refs:
+      - master
+
+inform-slack-qa:
+  extends: .inform
+  script:
+    - set -ex
+    - apk add git
+    - |
+      function get_pipeline() {
+        IID="$1"
+        curl -s --header "PRIVATE-TOKEN: ${API_TOKEN}" \
+          "https://gitlab.awesome-it.de/api/v4/projects/${CI_PROJECT_ID}/pipelines/${IID}"
+      }
+
+      function get_sha() {
+        CIID=$1
+        while true ; do
+          CIID=$(( $CIID - 1 ))
+          OUTPUT=$( get_pipeline "$CIID" )
+          if echo $OUTPUT | grep -q '"status":"success"' && echo $OUTPUT | grep -q '"tag":true' ; then
+            break
+          fi
+          if [[ $CIID -lt 3000 ]] ; then
+            echo "ERROR: could not find any pipeline" >> /dev/stderr
+            exit 1
+          fi
+        done
+        echo "$OUTPUT" | sed 's/.*"sha":"\([0-9a-f]*\)".*/\1/'
+      }
+    - >
+      LAST_PIPELINE_SHA="$( get_sha "${CI_PIPELINE_ID}" )"
+    - >
+      MESSAGES="$(
+      git log --oneline ${LAST_PIPELINE_SHA}..${CI_COMMIT_SHA} |
+      sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g' |
+      sed 's/"/\\"/g'
+      )"
+    - >
+      COVERAGE="$( get_pipeline "${CI_PIPELINE_ID}" | sed 's/.*"coverage":"\?\(\([0-9.]*\|null\)\).*/\1/' )"
+    - >
+      curl -X POST -H 'Content-Type: application/json' --fail
+      --data
+      '{
+        "username":"Infinity Deploy Hook Qa",
+        "icon_emoji":":eyes:",
+        "text":"<https://test.infinitymaps.io|'${CI_COMMIT_REF_NAME}' deployed to beta successfully>",
+        "attachments": [
+          {
+          "fallback":"Commit messages since last deployment - change log",
+          "pretext":"Commit messages since last deployment - change log",
+          "text":"'"${MESSAGES}"'",
+          "color":"#65b187"
+          },
+          {
+          "fallback":"Coverage '"${COVERAGE/null/no coverage value}"' %",
+          "pretext":"<https://gitlab.awesome-it.de/infinity/app/-/pipelines/'"${CI_PIPELINE_ID}"'|Test coverage>",
+          "text":"Coverage: '"${COVERAGE/null/no coverage value}"' %",
+          "color":"#8067A9"
+          }
+        ]
+      }'
+      "$SLACK_URL"
+  only:
+    # only for tags with version number
+    refs:
+      - /[0-9]+\.[0-9]+\.[0-9]+(-\w+)?/
+  needs:
+    - deploy-qa
+
+inform-slack-prod:
+  extends: .inform
+  script:
+    - set -ex
+    - >
+      curl -X POST -H 'Content-Type: application/json' --fail
+      --data
+      '{
+        "username":"Infinity Deploy Hook Prod",
+        "icon_emoji":":rocket:",
+        "icon_url":"https://infinitymaps.io/wp-content/uploads/2019/11/190922_Deep_Rectangle_white_v5_material_shadow_253x81.png",
+        "text":"New version <https://app.infinitymaps.io|'${CI_COMMIT_REF_NAME}' deployed to production successfully>",
+      }'
+      "$SLACK_URL"
+  only:
+    refs:
+      - /[0-9]+\.[0-9]+\.[0-9]+(-\w+)?/
+  needs:
+    - deploy-prod
+
+inform-slack-merge:
+  extends: .inform
+  script:
+    - set -ex
+    - >
+      curl -X POST -H 'Content-Type: application/json' --fail
+      --data
+      '{
+        "username":"Infinity Deploy Hook Merge Request",
+        "icon_emoji":":reagenzglas:",
+        "text":"Merge request <https://gitlab.awesome-it.de/infinity/app/-/merge_requests/'${CI_MERGE_REQUEST_IID}'|'"${CI_MERGE_REQUEST_TITLE}"'> was successfully deployed to <https://dev-merge-'${CI_MERGE_REQUEST_IID}'.infinitymaps.io>"
+      }'
+      "$SLACK_URL"
+  only:
+    refs:
+      - merge_requests
+
+inform-slack-branch:
+  extends: .inform
+  script:
+    - set -ex
+    - |
+      if [[ -n "${CI_COMMIT_TAG}" ]] ; then
+        URL="https://gitlab.awesome-it.de/infinity/app/-/tags/${CI_COMMIT_TAG}"
+      else
+        URL="https://gitlab.awesome-it.de/infinity/app/-/tree/${CI_COMMIT_BRANCH}"
+      fi
+    - >
+      curl -X POST -H 'Content-Type: application/json' --fail
+      --data
+      '{
+        "username":"Infinity Deploy Hook Branch/Tag '"${CI_COMMIT_REF_NAME}"'",
+        "icon_emoji":":reagenzglas:",
+        "text":"Branch/Tag <'"${URL}"'|'"${CI_COMMIT_REF_SLUG}"'> was successfully deployed to <https://branch-'"${CI_COMMIT_REF_SLUG}"'.infinitymaps.io>"
+      }'
+      "$SLACK_URL"
+  only:
+    refs:
+      - /^deploy\/.*$/
+
+
+cleanup-merge:
+  extends: .helm
+  stage: cleanup
+  script:
+    - ./helm uninstall inf-merge-${CI_MERGE_REQUEST_IID} --debug --namespace inf-dev-app
+  only:
+    refs:
+      - merge_requests
+  when: manual
+  environment:
+    name: review/merge-${CI_MERGE_REQUEST_IID}
+    action: stop
+
+cleanup-branch:
+  extends: .helm
+  stage: cleanup
+  script:
+    - ./helm uninstall inf-branch-${CI_COMMIT_REF_SLUG} --debug --namespace inf-dev-app
+  only:
+    refs:
+      - /^deploy\/.*$/
+  when: manual
+  environment:
+    name: review/branch-${CI_COMMIT_REF_SLUG}
+    action: stop

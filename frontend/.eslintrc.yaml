@@ -1,0 +1,109 @@
+---
+extends:
+  - eslint:recommended
+  - airbnb
+  - plugin:react/recommended
+  - plugin:prettier/recommended
+  - plugin:import/recommended
+  - plugin:import/typescript
+plugins:
+  - prettier
+  - react-hooks
+parser: "@typescript-eslint/parser"
+parserOptions:
+  ecmaVersion: 2016
+  sourceType: module
+  requireConfigFile: false
+env:
+  es6: true
+  jest: true
+  browser: true
+  node: true
+globals:
+  DEBUG: false
+rules: &rules
+  prettier/prettier:
+    - error
+    - singleQuote: true
+      semi: false
+      trailingComma: all
+      bracketSpacing: false
+      printWidth: 120
+      arrowParens: avoid
+  indent:
+    - 'off'
+    - 2
+    - SwitchCase: 1
+  linebreak-style:
+    - error
+    - unix
+  quotes:
+    - error
+    - single
+    - avoidEscape: true
+  semi:
+    - error
+    - never
+  object-curly-spacing: 'off'
+  object-curly-newline:
+    - error
+    - multiline: true
+      consistent: true
+  react/jsx-filename-extension:
+    - 1
+    - extensions:
+        - ".js"
+        - ".jsx"
+  import/no-extraneous-dependencies: 0
+  import/prefer-default-export: 0
+  import/extensions: 0
+  react/function-component-definition: 0
+  react/jsx-props-no-spreading: 0
+  react/state-in-constructor: 0
+  react/forbid-prop-types:
+    - 0
+  no-underscore-dangle:
+    - 0
+  react/prop-types:
+    - 0
+  jsx-a11y/label-has-for:
+    - 0
+  jsx-a11y/anchor-is-valid:
+    - 1
+    - aspects:
+        - invalidHref
+        - preferButton
+  jsx-a11y/no-autofocus:
+    - 0
+  camelcase:
+    - 0
+  class-methods-use-this: 0
+  no-return-assign: 'off'
+  no-param-reassign: 'off'
+  no-nested-ternary: 'off'
+  arrow-parens: 'off'
+  react-hooks/exhaustive-deps: error
+  '@typescript-eslint/ban-ts-comment':
+    - 'warn'
+    - 'ts-ignore': 'allow-with-description'
+  "no-extra-semi": "off"
+  "@typescript-eslint/no-extra-semi": "off"
+  "no-shadow": "off"
+  "@typescript-eslint/no-shadow": ["error"]
+overrides:
+  - files:
+      - "*.ts"
+      - "*.tsx"
+    extends:
+      - eslint:recommended
+      - airbnb
+      - plugin:react/recommended
+      - plugin:prettier/recommended
+      - plugin:@typescript-eslint/eslint-recommended
+      - plugin:@typescript-eslint/recommended
+      - plugin:import/typescript
+    plugins:
+      - prettier
+      - react-hooks
+      - "@typescript-eslint"
+    rules: *rules

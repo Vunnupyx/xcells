@@ -1,0 +1,36 @@
+# not yet implemented
+GET localhost:3001/api/v1/maps
+
+<> 2019-12-04T065220.500.json
+
+###
+POST localhost:3001/api/v1/maps
+
+{"nodes": {}, "edges": {}, "config": {}, "root": "test"}
+
+<> 2019-12-04T080806.200.json
+<> 2019-12-04T072717.200.json
+<> 2019-12-04T072020.400.json
+<> 2019-12-04T065258.400.json
+
+###
+GET localhost:3001/api/v1/maps/5de810316fec3e3e6366ab53
+
+
+###
+DELETE localhost:3001/api/v1/maps/5de81091eb78de3fa83652fc
+
+###
+PUT localhost:3001/api/v1/maps/5de80e0a893a7d37af330b26
+
+###
+# test the frontend
+GET localhost:3001/index.html
+
+###
+POST localhost:3001/api/v1/maps/5de810316fec3e3e6366ab53/images
+Content-Type: image/svg+xml
+
+<svg/>
+
+###
