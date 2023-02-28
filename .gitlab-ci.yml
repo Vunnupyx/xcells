@@ -50,7 +50,7 @@ stages:
 
 .frontend-npm:
   extends: .frontend
-  image: "registry.awesome-it.de/upstream-dockerhub/library/node:16-alpine"
+  image: "node:16-alpine"
   cache:
     key: node-modules-frontend
     paths:
@@ -63,7 +63,7 @@ stages:
 
 .backend-npm:
   extends: .backend
-  image: "registry.awesome-it.de/upstream-dockerhub/library/node:16-alpine"
+  image: "node:16-alpine"
   cache:
     key: node-modules-backend
     paths:
@@ -76,7 +76,7 @@ stages:
 
 #.inform:
 #  stage: inform
-#  image: "registry.awesome-it.de/upstream-dockerhub/library/alpine:latest"
+#  image: "alpine:latest"
 #  before_script:
 #    - apk add curl
 
@@ -188,7 +188,7 @@ test-backend:
   extends: .backend-npm
   stage: test
   services:
-    - name: "registry.awesome-it.de/upstream-dockerhub/library/mongo:4.2.8"
+    - name: "mongo:4.2.8"
       alias: mongo
   variables:
     MONGO_HOST: "mongo"
@@ -253,7 +253,7 @@ build-backend:
 #e2e-test:
 #  extends: .when
 #  stage: e2e
-#  image: "registry.awesome-it.de/upstream-dockerhub/library/node:16-alpine"
+#  image: "node:16-alpine"
 #  variables:
 #    # Enable network connection between services
 #    # See https://stackoverflow.com/a/62804104/381166
@@ -269,7 +269,7 @@ build-backend:
 #    # change the save to read only interval to speedup tests, used in tests and backend
 #    SAVE_TO_DATABASE_INTERVAL: "0"
 #  services:
-#    - name: "registry.awesome-it.de/upstream-dockerhub/library/mongo:4.2.8"
+#    - name: "mongo:4.2.8"
 #      alias: mongo
 #    - name: "registry.awesome-it.de/upstream-dockerhub/selenium/hub:3.141.59"
 #      alias: selenium-hub
