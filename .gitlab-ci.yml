@@ -26,7 +26,7 @@ stages:
 
 #.helm:
 #  extends: .when
-#  image: "registry.awesome-it.de/upstream-dockerhub/library/alpine:latest"
+#  image: "alpine:latest"
 #  before_script:
 #    - apk add --no-cache ca-certificates
 #    - KUBECTL_VERSION=$( wget -O - https://storage.googleapis.com/kubernetes-release/release/stable.txt )
@@ -84,7 +84,7 @@ stages:
 lint-docker-frontend:
   extends: .frontend
   stage: lint
-  image: "registry.awesome-it.de/upstream-dockerhub/hadolint/hadolint:latest-debian"
+  image: "hadolint/hadolint:latest-debian"
   script:
     - /bin/hadolint Dockerfile
   only:
@@ -94,7 +94,7 @@ lint-docker-frontend:
 lint-docker-backend:
   extends: .backend
   stage: lint
-  image: "registry.awesome-it.de/upstream-dockerhub/hadolint/hadolint:latest-debian"
+  image: "hadolint/hadolint:latest-debian"
   script:
     - /bin/hadolint Dockerfile
   only:
@@ -271,9 +271,9 @@ build-backend:
 #  services:
 #    - name: "mongo:4.2.8"
 #      alias: mongo
-#    - name: "registry.awesome-it.de/upstream-dockerhub/selenium/hub:3.141.59"
+#    - name: "selenium/hub:3.141.59"
 #      alias: selenium-hub
-#    - name: "registry.awesome-it.de/upstream-dockerhub/selenium/node-chrome-debug:3.141.59"
+#    - name: "selenium/node-chrome-debug:3.141.59"
 #      alias: selenium-chrome
 #  before_script:
 #    # start the backend
