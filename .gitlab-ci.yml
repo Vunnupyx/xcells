@@ -19,7 +19,7 @@ stages:
 .when:
   only:
     refs:
-      - master
+      - main
 #      - /[0-9]+\.[0-9]+\.[0-9]+(-\w+)?/
 #      - merge_requests
 #      - /^deploy\/.*$/
@@ -326,7 +326,7 @@ package-frontend:
         TAG=${CI_COMMIT_SHORT_SHA}
         NAME="frontend-branch"
       else
-        TAG=${CI_COMMIT_REF_NAME/master/latest}
+        TAG=${CI_COMMIT_REF_NAME/main/latest}
         NAME="frontend"
       fi
     - /kaniko/executor
@@ -351,7 +351,7 @@ package-backend:
         TAG=${CI_COMMIT_SHORT_SHA}
         NAME="backend-branch"
       else
-        TAG=${CI_COMMIT_REF_NAME/master/latest}
+        TAG=${CI_COMMIT_REF_NAME/main/latest}
         NAME="backend"
       fi
     - /kaniko/executor
@@ -371,7 +371,7 @@ package-backend:
 #      --set "frontend.annotations.version=$CI_COMMIT_SHA"
 #  only:
 #    refs:
-#      - master
+#      - main
 #  environment:
 #    name: dev
 #    url: https://dev.infinitymaps.io
@@ -496,7 +496,7 @@ package-backend:
 #        while true ; do
 #          CIID=$(( $CIID - 1 ))
 #          OUTPUT=$( get_pipeline "$CIID" )
-#          if echo $OUTPUT | grep -q '"status":"success"' && echo $OUTPUT | grep -q '"ref":"master"' ; then
+#          if echo $OUTPUT | grep -q '"status":"success"' && echo $OUTPUT | grep -q '"ref":"main"' ; then
 #            break
 #          fi
 #          if [[ $CIID -lt 3000 ]] ; then
@@ -522,7 +522,7 @@ package-backend:
 #      '{
 #        "username":"Infinity Deploy Hook Master",
 #        "icon_emoji":":fire:",
-#        "text":"<https://dev.infinitymaps.io|master deployed successfully>",
+#        "text":"<https://dev.infinitymaps.io|main deployed successfully>",
 #        "attachments": [
 #          {
 #          "fallback":"Commit messages since last deployment - change log",
@@ -541,7 +541,7 @@ package-backend:
 #      "$SLACK_URL"
 #  only:
 #    refs:
-#      - master
+#      - main
 #
 #inform-slack-qa:
 #  extends: .inform
