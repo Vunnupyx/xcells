@@ -13,6 +13,7 @@ import useSnackbar from '../hooks/useSnackbar'
 import useApiMutation from '../hooks/useApiMutation'
 import useApiQueryStatic from '../hooks/useApiQueryStatic'
 import {identify, setMixpanelUserProfile} from '../utils/tracking/trackingcode'
+import SignupDialog from '../components/dialogs/SignupDialog'
 
 const log = debug('app:auth')
 const logError = log.extend('ERROR', '::')
@@ -36,6 +37,7 @@ export const AuthProvider = ({children}) => {
   const {error, warning} = useSnackbar()
   const queryCache = useQueryCache()
   const [showLogginDialog, setShowLoginDialog] = useState(false)
+  const [showSignupDialog, setShowSignupDialog] = useState(false)
   const {push} = useHistory()
   const {data: loginData} = useApiQueryStatic({url: '/auth/login'})
   const [isRefreshed, setIsRefreshed] = useState(false)
@@ -169,8 +171,27 @@ export const AuthProvider = ({children}) => {
 
   if (!isRefreshed) return null
 
-  const dialog = showLogginDialog ? (
-    <LoginDialog open onClose={() => setShowLoginDialog(false)} setAuth={setAuth} refresh={refresh} />
+  const onClose = () => {
+    setShowLoginDialog(false)
+    setShowSignupDialog(false)
+  }
+
+  const dialog = showSignupDialog ? (
+    <SignupDialog
+      open
+      onClose={onClose}
+      setAuth={setAuth}
+      refresh={refresh}
+      onLogin={() => setShowSignupDialog(false)}
+    />
+  ) : showLogginDialog ? (
+    <LoginDialog
+      open
+      onClose={() => setShowLoginDialog(false)}
+      setAuth={setAuth}
+      refresh={refresh}
+      onSignup={() => setShowSignupDialog(true)}
+    />
   ) : null
 
   return (

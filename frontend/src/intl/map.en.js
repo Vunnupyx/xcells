@@ -207,6 +207,8 @@ export default {
   loginSignUp: 'Create New Account',
   loginTitle: 'Log In',
   loginUsername: 'Username',
+  signupTitle: 'Sign Up',
+  createAccount: 'Create Account',
 
   authSessionExpired: 'Your session expired. Please login again.',
 
@@ -218,6 +220,7 @@ export default {
   errorLoginPassword: 'Password incorrect.',
   errorLoginUsername: 'Unknown username.',
   errorErrorToBackendSuccess: 'Successfully submitted error for further investigation',
+  errorEmailExists: 'Email already exists',
   errorUnknown: 'Unknown error occured.',
   errorList: 'Error List',
   error404: 'The page you requested was not found.',

@@ -6,47 +6,29 @@ import {TextField} from 'mui-rff'
 import Box from '@material-ui/core/Box'
 import Grid from '@material-ui/core/Grid'
 import Typography from '@material-ui/core/Typography'
-import makeStyles from '@material-ui/styles/makeStyles'
 
 import Dialog from '@material-ui/core/Dialog'
 import DialogActions from '@material-ui/core/DialogActions'
 import DialogContent from '@material-ui/core/DialogContent'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import Button from '@material-ui/core/Button'
-import Link from '@material-ui/core/Link'
-import Divider from '@material-ui/core/Divider'
 import useSnackbar from '../../hooks/useSnackbar'
 import Version from '../Version'
 import Copyright from '../Copyright'
 import useApiMutation from '../../hooks/useApiMutation'
 
-const useStyles = makeStyles(theme => ({
-  paper: {
-    paddingTop: 5,
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingBottom: 20,
-    borderRadius: 10,
-  },
-  avatar: {
-    margin: theme.spacing(1),
-    backgroundColor: theme.palette.primary.main,
-  },
-}))
-
-const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
-  const classes = useStyles()
+const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
   const {error: errorSnackbar} = useSnackbar()
 
-  const [sendLogin] = useApiMutation({
-    url: '/auth',
+  const [sendSignup] = useApiMutation({
+    url: '/auth/signup',
     onSuccess: () => {
       refresh()
     },
     onError: error => {
       const {status, message} = error
       if (status === 401) {
-        errorSnackbar(<FormattedMessage id="errorLogin" />)
+        errorSnackbar(<FormattedMessage id="errorEmailExists" />)
       } else if (message) {
         errorSnackbar(message)
       } else {
@@ -55,22 +37,22 @@ const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
     },
   })
 
-  const login = useCallback(
+  const signup = useCallback(
     formData => {
-      sendLogin({body: JSON.stringify(formData)})
+      sendSignup({body: JSON.stringify(formData)})
       onClose()
     },
-    [sendLogin, onClose],
+    [sendSignup, onClose],
   )
 
   return (
     <Dialog open={open} onClose={onClose} {...rest}>
       <Form
-        onSubmit={login}
+        onSubmit={signup}
         render={({handleSubmit, submitting}) => (
-          <form className={classes.form} noValidate onSubmit={handleSubmit}>
+          <form noValidate onSubmit={handleSubmit}>
             <DialogTitle>
-              <FormattedMessage id="loginTitle" />
+              <FormattedMessage id="signupTitle" />
             </DialogTitle>
             <DialogContent>
               <Grid container direction="column" justify="center" alignItems="center">
@@ -98,25 +80,9 @@ const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
                     autoComplete="current-password"
                   />
                   <Grid container direction="column" justify="center" alignItems="center">
-                    <Grid item xs>
-                      <Link href="https://infinitymaps.io/my-account/lost-password/" variant="body2">
-                        <FormattedMessage id="loginForgotPassword" />
-                      </Link>
-                    </Grid>
-                    <Grid item>
-                      <Divider variant="middle" />
-                    </Grid>
-                    <Grid item>
-                      <Button
-                        id="loginButtonRegister"
-                        color="secondary"
-                        variant="contained"
-                        className={classes.signup}
-                        onClick={onSignup}
-                      >
-                        <FormattedMessage id="loginSignUp" />
-                      </Button>
-                    </Grid>
+                    <Button id="loginButtonRegister" color="secondary" variant="contained" onClick={onLogin}>
+                      <FormattedMessage id="loginTitle" />
+                    </Button>
                   </Grid>
                 </Grid>
                 <Grid item>
@@ -133,7 +99,7 @@ const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
                 <FormattedMessage id="buttonCancel" />
               </Button>
               <Button id="loginButtonSubmit" type="submit" color="primary" disabled={submitting}>
-                <FormattedMessage id="loginTitle" />
+                <FormattedMessage id="createAccount" />
               </Button>
             </DialogActions>
           </form>
@@ -143,4 +109,4 @@ const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
   )
 }
 
-export default LoginDialog
+export default SignupDialog

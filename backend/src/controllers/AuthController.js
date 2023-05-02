@@ -121,6 +121,31 @@ const AuthController = {
       ctx.body = {redirect: false}
     }
   },
+  signup: async ctx => {
+    const {username, password} = await ctx.request.json()
+    const usernameRegex = new RegExp(`^${escapeRegexString(username)}$`, 'i')
+    await User.find({name: usernameRegex})
+      .then(async result => {
+        if (result.length !== 0) {
+          ctx.throw(401, 'Email already exists.')
+        } else {
+          const meta = {store: {fieldsOfWork: {student: null, pupil: null, other: null}}}
+          let user = new User({
+            id: username,
+            name: username,
+            mail: username,
+            password,
+            roles: 'subscriber',
+            meta,
+          })
+          await user
+            .save()
+            .then(() => (ctx.body = {success: true}))
+            .catch(() => (ctx.body = {success: false}))
+        }
+      })
+      .catch(() => ctx.throw(401, 'User Register fail'))
+  },
   logout: ctx => {
     const body = {success: true}
 
