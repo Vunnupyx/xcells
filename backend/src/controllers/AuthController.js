@@ -43,12 +43,13 @@ const AuthController = {
       }
 
       const usernameRegex = new RegExp(`^${escapeRegexString(username)}$`, 'i')
-      const user = await User.findOne({name: usernameRegex}, {password: 1})
-
+      const user = await User.findOne({name: usernameRegex}, {password: 1, confirmed: 1})
       if (!user) {
         ctx.throw(401, 'User not found.')
       } else if (!(await user.comparePassword(password))) {
         ctx.throw(401, 'Wrong password.')
+      } else if (!user.confirmed) {
+        ctx.throw(403, 'Error: Pending Activation')
       }
 
       auth = generateAuth(await User.findOne({name: usernameRegex}))
@@ -123,25 +124,27 @@ const AuthController = {
   },
   signup: async ctx => {
     const {username, password} = await ctx.request.json()
+    if (!username || !password) {
+      ctx.throw(400, 'Username and password required.')
+    }
     const usernameRegex = new RegExp(`^${escapeRegexString(username)}$`, 'i')
     await User.find({name: usernameRegex})
       .then(async result => {
         if (result.length !== 0) {
           ctx.throw(401, 'Email already exists.')
         } else {
-          const meta = {store: {fieldsOfWork: {student: null, pupil: null, other: null}}}
           let user = new User({
             id: username,
             name: username,
             mail: username,
             password,
-            roles: 'subscriber',
-            meta,
+            confirmed: false,
           })
           await user
             .save()
             .then(() => (ctx.body = {success: true}))
             .catch(() => (ctx.body = {success: false}))
+          //mail.send
         }
       })
       .catch(() => ctx.throw(401, 'User Register fail'))

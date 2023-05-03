@@ -225,6 +225,7 @@ export default {
   errorList: 'Error List',
   error404: 'The page you requested was not found.',
   adminList: 'User Stats',
+  adminWaitlist: 'Waitlist',
 
   clientErrorUserId: 'User ID',
   clientErrorPath: 'Url Path',
@@ -612,6 +613,7 @@ export default {
     mapsFeedback: 'Feedback',
     mapsAdminErrors: 'ADMIN: Errors',
     mapsAdminCRM: 'User Stats',
+    mapsAdminWaitlist: 'Waitlist',
     login: 'Login',
   },
 

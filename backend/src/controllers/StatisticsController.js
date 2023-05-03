@@ -277,6 +277,18 @@ const StatisticsController = {
 
     ctx.body = await InfinityMap.aggregate([filterUser, exportData, filterTitle, sort])
   },
+
+  userWaitlist: async ctx => {
+    ctx.body = await User.find({confirmed: false}, {id: 1, name: 1, mail: 1})
+  },
+
+  activateUser: async ctx => {
+    const {statisticsUser} = ctx
+    if (!statisticsUser) ctx.throw(400, 'User is not pending activation')
+    statisticsUser.confirmed = true
+    await statisticsUser.save()
+    ctx.body = {success: true}
+  },
 }
 
 export default StatisticsController
