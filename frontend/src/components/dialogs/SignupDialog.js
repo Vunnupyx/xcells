@@ -2,37 +2,27 @@ import React, {useCallback} from 'react'
 import {FormattedMessage} from 'react-intl'
 import {Form} from 'react-final-form'
 import {TextField} from 'mui-rff'
-
-import Box from '@material-ui/core/Box'
-import Grid from '@material-ui/core/Grid'
-import Typography from '@material-ui/core/Typography'
-
-import Dialog from '@material-ui/core/Dialog'
-import DialogActions from '@material-ui/core/DialogActions'
-import DialogContent from '@material-ui/core/DialogContent'
-import DialogTitle from '@material-ui/core/DialogTitle'
-import Button from '@material-ui/core/Button'
+import {Typography, Grid, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@material-ui/core'
 import useSnackbar from '../../hooks/useSnackbar'
 import Version from '../Version'
 import Copyright from '../Copyright'
 import useApiMutation from '../../hooks/useApiMutation'
 
 const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
-  const {error: errorSnackbar} = useSnackbar()
+  const {success, error} = useSnackbar()
 
   const [sendSignup] = useApiMutation({
     url: '/auth/signup',
     onSuccess: () => {
-      refresh()
+      success(<FormattedMessage id="signupSuccess" />)
+      onLogin()
     },
-    onError: error => {
-      const {status, message} = error
-      if (status === 401) {
-        errorSnackbar(<FormattedMessage id="errorEmailExists" />)
-      } else if (message) {
-        errorSnackbar(message)
+    onError: err => {
+      const {message} = err
+      if (message) {
+        error(message)
       } else {
-        errorSnackbar(<FormattedMessage id="errorUnknown" />)
+        error(<FormattedMessage id="errorServer" />)
       }
     },
   })
@@ -40,9 +30,8 @@ const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
   const signup = useCallback(
     formData => {
       sendSignup({body: JSON.stringify(formData)})
-      onClose()
     },
-    [sendSignup, onClose],
+    [sendSignup],
   )
 
   return (
@@ -67,6 +56,16 @@ const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
                     name="username"
                     autoComplete="username"
                     autoFocus
+                  />
+                  <TextField
+                    variant="outlined"
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="mail"
+                    label={<FormattedMessage id="loginMail" />}
+                    name="mail"
+                    autoComplete="mail"
                   />
                   <TextField
                     variant="outlined"

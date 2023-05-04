@@ -16,7 +16,7 @@ const WaitlistAdmin = () => {
 
   if ((isFetching && !data) || !auth?.roles || !auth.roles.includes(ROLES.administrator)) return null
 
-  return <WaitlistTable data={data} />
+  return <WaitlistTable initialWaitlist={data} />
 }
 
 export default WaitlistAdmin

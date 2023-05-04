@@ -7,6 +7,7 @@ import generateAuth from './utils/generateAuth'
 import escapeRegexString from './utils/escapeRegexString'
 
 import {createHash} from 'crypto'
+import {emailer} from '../email'
 
 const shaHash = str => {
   const shasum = createHash('sha1')
@@ -122,33 +123,40 @@ const AuthController = {
       ctx.body = {redirect: false}
     }
   },
+
   signup: async ctx => {
-    const {username, password} = await ctx.request.json()
-    if (!username || !password) {
-      ctx.throw(400, 'Username and password required.')
+    const {username, mail, password} = await ctx.request.json()
+    if (!username || !password || !mail) {
+      ctx.throw(400, 'Username, email and password required.')
     }
     const usernameRegex = new RegExp(`^${escapeRegexString(username)}$`, 'i')
-    await User.find({name: usernameRegex})
-      .then(async result => {
-        if (result.length !== 0) {
-          ctx.throw(401, 'Email already exists.')
-        } else {
-          let user = new User({
-            id: username,
-            name: username,
-            mail: username,
-            password,
-            confirmed: false,
-          })
-          await user
-            .save()
-            .then(() => (ctx.body = {success: true}))
-            .catch(() => (ctx.body = {success: false}))
-          //mail.send
-        }
-      })
-      .catch(() => ctx.throw(401, 'User Register fail'))
+    const mailRegex = new RegExp(`^${escapeRegexString(mail)}$`, 'i')
+
+    const existingUsers = await User.findOne({$or: [{mail: mailRegex}, {name: usernameRegex}]}).exec()
+
+    if (existingUsers.name === username) {
+      ctx.throw(400, 'Username already exists.')
+    } else if (existingUsers.mail === mail) {
+      ctx.throw(400, 'Email already exists.')
+    }
+
+    const user = new User({
+      id: username,
+      name: username,
+      mail: mail,
+      password,
+      confirmed: false,
+    })
+    await user.save()
+    try {
+      await emailer.notifyAdminForNewUser(mail, username)
+      await emailer.notifyUserForSignup(mail, username)
+    } catch (err) {
+      console.log(err)
+    }
+    ctx.body = {success: true}
   },
+
   logout: ctx => {
     const body = {success: true}
 

@@ -284,7 +284,7 @@ const StatisticsController = {
 
   activateUser: async ctx => {
     const {statisticsUser} = ctx
-    if (!statisticsUser) ctx.throw(400, 'User is not pending activation')
+    if (statisticsUser.confirmed) ctx.throw(400, 'User is not pending activation')
     statisticsUser.confirmed = true
     await statisticsUser.save()
     ctx.body = {success: true}

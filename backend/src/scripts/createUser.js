@@ -25,7 +25,7 @@ const createUser = async () => {
   const meta = {store: {fieldsOfWork: {student: null, pupil: null, other: null}}}
   try {
     await connectDb()
-    await new User({id: name, name, mail, password, roles, meta}).save()
+    await new User({id: name, name, mail, confirmed: true, password, roles, meta}).save()
     console.log(`successfully saved user ${name}`)
     await closeDb()
   } catch (e) {

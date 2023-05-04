@@ -207,11 +207,13 @@ export default {
   loginSignUp: 'Create New Account',
   loginTitle: 'Log In',
   loginUsername: 'Username',
+  loginMail: 'Email',
   signupTitle: 'Sign Up',
   createAccount: 'Create Account',
 
   authSessionExpired: 'Your session expired. Please login again.',
 
+  signupSuccess: 'User has been registered and is awaiting activation.',
   errorRequestHandling: 'A server error occurred.',
   errorServer: 'A server error occurred. Please try again later.',
   errorLogin: 'Username or password is incorrect.',
@@ -220,7 +222,6 @@ export default {
   errorLoginPassword: 'Password incorrect.',
   errorLoginUsername: 'Unknown username.',
   errorErrorToBackendSuccess: 'Successfully submitted error for further investigation',
-  errorEmailExists: 'Email already exists',
   errorUnknown: 'Unknown error occured.',
   errorList: 'Error List',
   error404: 'The page you requested was not found.',
@@ -675,6 +676,10 @@ export default {
     crm: {
       userProfile: {
         commentSaveSuccess: 'Your comment was saved successfully',
+      },
+      waitlist: {
+        ActivateAccountSuccess: 'Account has been activated successfully',
+        ActivateAccountError: 'Failed to activate',
       },
     },
   },

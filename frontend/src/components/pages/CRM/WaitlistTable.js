@@ -16,8 +16,8 @@ import {
   Grid,
 } from '@material-ui/core'
 import {FormattedMessage} from 'react-intl'
-import useApiMutation from '../../../hooks/useApiMutation'
 import useSnackbar from '../../../hooks/useSnackbar'
+import useApi from '../../../hooks/useApi'
 
 const StringCell = ({value}) => {
   const ind = value.indexOf('@')
@@ -55,10 +55,12 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-export default function WaitlistTable({data}) {
+export default function WaitlistTable({initialWaitlist}) {
   const classes = useStyles()
+  const api = useApi()
   const {success, error} = useSnackbar()
 
+  const [waitlist, setWaitlist] = React.useState(initialWaitlist)
   const [searchField, setSearchField] = useState('')
   const [page, setPage] = useState(0)
 
@@ -83,24 +85,6 @@ export default function WaitlistTable({data}) {
     setSearchField(searchFieldStorage)
   }, [])
 
-  const [userActivate] = useApiMutation({
-    url: '/statistics/users',
-    method: 'get',
-    onSuccess: () => {
-      success(<FormattedMessage id="admin.crm.userProfile.commentSaveSuccess" />)
-    },
-    onError: err => {
-      const {status, message} = err
-      if (status === 401) {
-        error(<FormattedMessage id="errorLogin" />)
-      } else if (message) {
-        error(message)
-      } else {
-        error(<FormattedMessage id="errorUnknown" />)
-      }
-    },
-  })
-
   window.onunload = () => {
     sessionStorage.removeItem('page')
     sessionStorage.removeItem('searchField')
@@ -108,7 +92,7 @@ export default function WaitlistTable({data}) {
 
   const rows = useMemo(
     () =>
-      Object.values(data)
+      Object.values(waitlist)
         .filter(value =>
           searchField
             .toLowerCase()
@@ -121,7 +105,7 @@ export default function WaitlistTable({data}) {
           name: value.name,
           mail: value.mail,
         })),
-    [data, searchField],
+    [waitlist, searchField],
   )
 
   const columns = [
@@ -166,6 +150,16 @@ export default function WaitlistTable({data}) {
     setSearchField(e.target.value)
     sessionStorage.setItem('searchField', e.target.value)
     setPage(0)
+  }
+
+  const onActivate = async id => {
+    try {
+      await api.get(`/statistics/waitlist/confirm/${id}`)
+      setWaitlist(waitlist.filter(waitItem => waitItem.id !== id))
+      success(<FormattedMessage id="admin.crm.waitlist.ActivateAccountSuccess" />)
+    } catch {
+      error(<FormattedMessage id="admin.crm.waitlist.ActivateAccountError" />)
+    }
   }
 
   function stableSort(array, comparator) {
@@ -239,7 +233,9 @@ export default function WaitlistTable({data}) {
                     </TableCell>
                   ))}
                   <TableCell size="small">
-                    <Button variant="outlined">Approve</Button>
+                    <Button onClick={() => onActivate(row.userId)} variant="outlined">
+                      Approve
+                    </Button>
                   </TableCell>
                 </TableRow>
               )
