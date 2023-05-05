@@ -129,15 +129,27 @@ const AuthController = {
     if (!username || !password || !mail) {
       ctx.throw(400, 'Username, email and password required.')
     }
-    const usernameRegex = new RegExp(`^${escapeRegexString(username)}$`, 'i')
-    const mailRegex = new RegExp(`^${escapeRegexString(mail)}$`, 'i')
 
-    const existingUsers = await User.findOne({$or: [{mail: mailRegex}, {name: usernameRegex}]}).exec()
+    //simplify checking later on
+    const serializedUsername = username.toLowerCase().replace(/ /g, '')
+    const serializedMail = mail.toLowerCase().replace(/ /g, '')
 
-    if (existingUsers.name === username) {
-      ctx.throw(400, 'Username already exists.')
-    } else if (existingUsers.mail === mail) {
-      ctx.throw(400, 'Email already exists.')
+    if (!serializedUsername || !serializedMail || password.length < 7) {
+      ctx.throw(400, 'Username, email and password required.')
+    }
+    const usernameRegex = new RegExp(`^${escapeRegexString(serializedUsername)}$`, 'i')
+    const mailRegex = new RegExp(`^${escapeRegexString(serializedMail)}$`, 'i')
+
+    const existingUsers = await User.find({$or: [{mail: mailRegex}, {name: usernameRegex}]})
+      .limit(1)
+      .exec()
+
+    if (existingUsers.length > 0) {
+      if (existingUsers[0].name === username) {
+        ctx.throw(400, 'Username already exists.')
+      } else if (existingUsers[0].mail === mail) {
+        ctx.throw(400, 'Email already exists.')
+      }
     }
 
     const user = new User({

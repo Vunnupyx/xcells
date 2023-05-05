@@ -113,7 +113,6 @@ export const AuthProvider = ({children}) => {
       queryCache.clear()
       identify(undefined)
       Object.values(LOCALSTORAGE_NAMES).forEach(n => localStorage.removeItem(n))
-      window.location.href = 'https://infinitymaps.io/en/ilogin/?action=logout&redirect_to=%2Fen%2Flogin%2F&_wpnonce='
       push('/maps')
     },
   })

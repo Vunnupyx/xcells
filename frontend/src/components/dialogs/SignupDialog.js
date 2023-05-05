@@ -2,21 +2,47 @@ import React, {useCallback} from 'react'
 import {FormattedMessage} from 'react-intl'
 import {Form} from 'react-final-form'
 import {TextField} from 'mui-rff'
-import {Typography, Grid, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@material-ui/core'
+import {Typography, Grid, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Link} from '@material-ui/core'
+import makeStyles from '@material-ui/styles/makeStyles'
 import useSnackbar from '../../hooks/useSnackbar'
 import Version from '../Version'
 import Copyright from '../Copyright'
 import useApiMutation from '../../hooks/useApiMutation'
+import isEmail from '../../utils/isEmail'
+import isValidPassword from '../../utils/isValidPassword'
+import AlertDialog from '../../shared/components/AlertDialog'
+
+const useStyles = makeStyles(() => ({
+  signIn: {
+    marginLeft: 8,
+    cursor: 'pointer',
+  },
+}))
+
+const validate = values => {
+  const errors = {}
+  if (!values.username) {
+    errors.username = <FormattedMessage id="usernameRequired" />
+  }
+  if (!values.mail) {
+    errors.mail = <FormattedMessage id="emailRequired" />
+  } else if (!isEmail(values.mail)) {
+    errors.mail = <FormattedMessage id="invalidEmailAddress" />
+  }
+  if (!values.password) {
+    errors.password = <FormattedMessage id="passwordRequired" />
+  } else if (!isValidPassword(values.password)) {
+    errors.password = <FormattedMessage id="invalidPassword" />
+  }
+  return errors
+}
 
 const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
-  const {success, error} = useSnackbar()
+  const classes = useStyles()
+  const {error} = useSnackbar()
 
-  const [sendSignup] = useApiMutation({
+  const [sendSignup, {data: isSuccess}] = useApiMutation({
     url: '/auth/signup',
-    onSuccess: () => {
-      success(<FormattedMessage id="signupSuccess" />)
-      onLogin()
-    },
     onError: err => {
       const {message} = err
       if (message) {
@@ -34,17 +60,29 @@ const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
     [sendSignup],
   )
 
+  if (isSuccess)
+    return (
+      <AlertDialog
+        open={open}
+        onClose={onClose}
+        onConfirm={onClose}
+        title={<FormattedMessage id="signupDialogTitle" />}
+        text={<FormattedMessage id="signupDialogMessage" />}
+      />
+    )
+
   return (
     <Dialog open={open} onClose={onClose} {...rest}>
       <Form
         onSubmit={signup}
+        validate={validate}
         render={({handleSubmit, submitting}) => (
           <form noValidate onSubmit={handleSubmit}>
             <DialogTitle>
               <FormattedMessage id="signupTitle" />
             </DialogTitle>
             <DialogContent>
-              <Grid container direction="column" justify="center" alignItems="center">
+              <Grid container direction="column" justifyContent="center" alignItems="center">
                 <Grid item>
                   <TextField
                     variant="outlined"
@@ -52,7 +90,7 @@ const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
                     required
                     fullWidth
                     id="username"
-                    label={<FormattedMessage id="loginUsername" />}
+                    label={<FormattedMessage id="username" />}
                     name="username"
                     autoComplete="username"
                     autoFocus
@@ -63,7 +101,7 @@ const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
                     required
                     fullWidth
                     id="mail"
-                    label={<FormattedMessage id="loginMail" />}
+                    label={<FormattedMessage id="email" />}
                     name="mail"
                     autoComplete="mail"
                   />
@@ -73,15 +111,18 @@ const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
                     required
                     fullWidth
                     name="password"
-                    label="Password"
+                    label={<FormattedMessage id="password" />}
                     type="password"
                     id="password"
                     autoComplete="current-password"
                   />
-                  <Grid container direction="column" justify="center" alignItems="center">
-                    <Button id="loginButtonRegister" color="secondary" variant="contained" onClick={onLogin}>
-                      <FormattedMessage id="loginTitle" />
-                    </Button>
+                  <Grid container direction="column" justifyContent="center" alignItems="center">
+                    <Typography variant="body1">
+                      <FormattedMessage id="alreadyExistAccount" />
+                      <Link className={classes.signIn} color="secondary" onClick={onLogin}>
+                        <FormattedMessage id="loginTitle" />
+                      </Link>
+                    </Typography>
                   </Grid>
                 </Grid>
                 <Grid item>

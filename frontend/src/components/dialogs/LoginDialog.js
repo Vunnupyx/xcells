@@ -2,35 +2,17 @@ import React, {useCallback} from 'react'
 import {FormattedMessage} from 'react-intl'
 import {Form} from 'react-final-form'
 import {TextField} from 'mui-rff'
-
-import Box from '@material-ui/core/Box'
-import Grid from '@material-ui/core/Grid'
-import Typography from '@material-ui/core/Typography'
+import {Box, Grid, Typography, Button, Link, Dialog, DialogActions, DialogContent, DialogTitle} from '@material-ui/core'
 import makeStyles from '@material-ui/styles/makeStyles'
-
-import Dialog from '@material-ui/core/Dialog'
-import DialogActions from '@material-ui/core/DialogActions'
-import DialogContent from '@material-ui/core/DialogContent'
-import DialogTitle from '@material-ui/core/DialogTitle'
-import Button from '@material-ui/core/Button'
-import Link from '@material-ui/core/Link'
-import Divider from '@material-ui/core/Divider'
 import useSnackbar from '../../hooks/useSnackbar'
 import Version from '../Version'
 import Copyright from '../Copyright'
 import useApiMutation from '../../hooks/useApiMutation'
 
-const useStyles = makeStyles(theme => ({
-  paper: {
-    paddingTop: 5,
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingBottom: 20,
-    borderRadius: 10,
-  },
-  avatar: {
-    margin: theme.spacing(1),
-    backgroundColor: theme.palette.primary.main,
+const useStyles = makeStyles(() => ({
+  signup: {
+    marginLeft: 8,
+    cursor: 'pointer',
   },
 }))
 
@@ -73,7 +55,7 @@ const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
               <FormattedMessage id="loginTitle" />
             </DialogTitle>
             <DialogContent>
-              <Grid container direction="column" justify="center" alignItems="center">
+              <Grid container direction="column" justifyContent="center" alignItems="center">
                 <Grid item>
                   <TextField
                     variant="outlined"
@@ -81,7 +63,7 @@ const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
                     required
                     fullWidth
                     id="username"
-                    label={<FormattedMessage id="loginUsername" />}
+                    label={<FormattedMessage id="username" />}
                     name="username"
                     autoComplete="username"
                     autoFocus
@@ -92,30 +74,24 @@ const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
                     required
                     fullWidth
                     name="password"
-                    label="Password"
+                    label={<FormattedMessage id="password" />}
                     type="password"
                     id="password"
                     autoComplete="current-password"
                   />
-                  <Grid container direction="column" justify="center" alignItems="center">
-                    <Grid item xs>
+                  <Grid container direction="column" justifyContent="center" alignItems="center">
+                    <Grid item>
                       <Link href="https://infinitymaps.io/my-account/lost-password/" variant="body2">
                         <FormattedMessage id="loginForgotPassword" />
                       </Link>
                     </Grid>
                     <Grid item>
-                      <Divider variant="middle" />
-                    </Grid>
-                    <Grid item>
-                      <Button
-                        id="loginButtonRegister"
-                        color="secondary"
-                        variant="contained"
-                        className={classes.signup}
-                        onClick={onSignup}
-                      >
-                        <FormattedMessage id="loginSignUp" />
-                      </Button>
+                      <Typography>
+                        <FormattedMessage id="notRegistered" />
+                        <Link color="secondary" className={classes.signup} onClick={onSignup}>
+                          <FormattedMessage id="loginSignUp" />
+                        </Link>
+                      </Typography>
                     </Grid>
                   </Grid>
                 </Grid>
