@@ -10,6 +10,7 @@ import {FormattedMessage} from 'react-intl'
 import CancelIcon from '@material-ui/icons/Cancel'
 
 import {useConfig} from '../../styles/config'
+import useAuth from '../../hooks/useAuth'
 
 const useStyles = makeStyles({
   paper: {
@@ -32,6 +33,7 @@ const useStyles = makeStyles({
 
 const GuestSignupBox = () => {
   const classes = useStyles()
+  const {signup} = useAuth()
   const config = useConfig()
   const [hidePaper, setHidePaper] = React.useState(true)
 
@@ -55,14 +57,7 @@ const GuestSignupBox = () => {
         <Typography gutterBottom variant="h5">
           <FormattedMessage id="signupMessageForGuests" />
         </Typography>
-        <Button
-          fullWidth
-          color="primary"
-          autoFocus
-          variant="contained"
-          className={classes.signup}
-          href="https://infinitymaps.io/register/"
-        >
+        <Button fullWidth color="primary" autoFocus variant="contained" className={classes.signup} onClick={signup}>
           <FormattedMessage id="buttonSignUp" />
         </Button>
       </Box>

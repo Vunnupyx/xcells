@@ -8,6 +8,7 @@ import escapeRegexString from './utils/escapeRegexString'
 
 import {createHash} from 'crypto'
 import {emailer} from '../email'
+import {ROLES} from '../shared/config/constants'
 
 const shaHash = str => {
   const shasum = createHash('sha1')
@@ -157,16 +158,15 @@ const AuthController = {
       name: username,
       mail: mail,
       password,
+      roles: [ROLES.subscriber],
       confirmed: false,
     })
     await user.save()
-    try {
-      await emailer.notifyAdminForNewUser(mail, username)
-      await emailer.notifyUserForSignup(mail, username)
-    } catch (err) {
-      console.log(err)
-    }
-    ctx.body = {success: true}
+
+    emailer.notifyAdminForNewUser(mail, username)
+    emailer.notifyUserForSignup(mail, username)
+
+    ctx.status = 200
   },
 
   logout: ctx => {

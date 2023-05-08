@@ -67,7 +67,7 @@ const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
         onClose={onClose}
         onConfirm={onClose}
         title={<FormattedMessage id="signupDialogTitle" />}
-        text={<FormattedMessage id="signupDialogMessage" />}
+        translationKey="signupDialogMessage"
       />
     )
 
@@ -116,21 +116,23 @@ const SignupDialog = ({setAuth, refresh, open, onClose, onLogin, ...rest}) => {
                     id="password"
                     autoComplete="current-password"
                   />
-                  <Grid container direction="column" justifyContent="center" alignItems="center">
-                    <Typography variant="body1">
+                </Grid>
+                <Grid container direction="column" justifyContent="center" alignItems="center" spacing={2}>
+                  <Grid item>
+                    <Typography>
                       <FormattedMessage id="alreadyExistAccount" />
                       <Link className={classes.signIn} color="secondary" onClick={onLogin}>
                         <FormattedMessage id="loginTitle" />
                       </Link>
                     </Typography>
                   </Grid>
-                </Grid>
-                <Grid item>
-                  <Box mt={8}>
-                    <Typography variant="body2" color="textSecondary" align="center">
-                      Version <Version /> - <Copyright />
-                    </Typography>
-                  </Box>
+                  <Grid item>
+                    <Box mt={6}>
+                      <Typography variant="body2" color="textSecondary" align="center">
+                        Version <Version /> - <Copyright />
+                      </Typography>
+                    </Box>
+                  </Grid>
                 </Grid>
               </Grid>
             </DialogContent>

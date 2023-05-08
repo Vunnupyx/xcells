@@ -7,16 +7,11 @@ import {useQueryCache} from 'react-query'
 import ProgressModal from '../ProgressModal'
 import useApiMutation from '../../hooks/useApiMutation'
 import {ROLES} from '../../shared/config/constants'
-import {register, subscribe} from '../../intl/links'
+import {subscribe} from '../../intl/links'
 import SubscribeDialog from '../dialogs/SubscribeDialog'
 import HistoryBackButton from '../wrapped/HistoryBackButton'
 import useAuth from '../../hooks/useAuth'
 import useMapList from '../../hooks/useMapList'
-
-const mapCreateNeedsSubscriptionValues = {
-  register,
-  subscribe,
-}
 
 const MapNew = () => {
   const {mapId: fromMapId, templateId: fromTemplateId} = useParams()
@@ -30,7 +25,7 @@ const MapNew = () => {
   }
 
   const [createMap, {data: createData, isSuccess, isLoading}] = useApiMutation({url})
-  const {auth, isLoggedIn} = useAuth()
+  const {auth, isLoggedIn, signup, SignupLink} = useAuth()
   const [isCreated, setIsCreated] = useState(false)
   const {data: maps = [], isFetching} = useMapList(false)
 
@@ -64,15 +59,19 @@ const MapNew = () => {
         buttons={
           <>
             <HistoryBackButton />
-            <Link href="https://infinitymaps.io/register/">
-              <Button>
-                <FormattedMessage id="buttonRegister" />
-              </Button>
-            </Link>
+            <Button component={Link} onClick={signup}>
+              <FormattedMessage id="buttonRegister" />
+            </Button>
           </>
         }
       >
-        <FormattedMessage id="mapCreateNeedsSubscription" values={mapCreateNeedsSubscriptionValues} />
+        <FormattedMessage
+          id="mapCreateNeedsSubscription"
+          values={{
+            register: SignupLink,
+            subscribe,
+          }}
+        />
       </SubscribeDialog>
     )
   }

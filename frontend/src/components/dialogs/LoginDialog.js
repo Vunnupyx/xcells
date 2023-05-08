@@ -24,6 +24,7 @@ const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
     url: '/auth',
     onSuccess: () => {
       refresh()
+      onClose()
     },
     onError: error => {
       const {status, message} = error
@@ -40,9 +41,8 @@ const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
   const login = useCallback(
     formData => {
       sendLogin({body: JSON.stringify(formData)})
-      onClose()
     },
-    [sendLogin, onClose],
+    [sendLogin],
   )
 
   return (
@@ -79,24 +79,26 @@ const LoginDialog = ({setAuth, refresh, open, onClose, onSignup, ...rest}) => {
                     id="password"
                     autoComplete="current-password"
                   />
-                  <Grid container direction="column" justifyContent="center" alignItems="center">
-                    <Grid item>
-                      <Link href="https://infinitymaps.io/my-account/lost-password/" variant="body2">
-                        <FormattedMessage id="loginForgotPassword" />
-                      </Link>
-                    </Grid>
-                    <Grid item>
-                      <Typography>
-                        <FormattedMessage id="notRegistered" />
-                        <Link color="secondary" className={classes.signup} onClick={onSignup}>
-                          <FormattedMessage id="loginSignUp" />
-                        </Link>
-                      </Typography>
-                    </Grid>
-                  </Grid>
+                </Grid>
+              </Grid>
+              <Grid container direction="column" justifyContent="center" alignItems="center" spacing={2}>
+                <Grid item>
+                  <Typography>
+                    <Link color="secondary" href="https://infinitymaps.io/my-account/lost-password/">
+                      <FormattedMessage id="loginForgotPassword" />
+                    </Link>
+                  </Typography>
                 </Grid>
                 <Grid item>
-                  <Box mt={8}>
+                  <Typography>
+                    <FormattedMessage id="notRegistered" />
+                    <Link color="secondary" className={classes.signup} onClick={onSignup}>
+                      <FormattedMessage id="loginSignUp" />
+                    </Link>
+                  </Typography>
+                </Grid>
+                <Grid item>
+                  <Box mt={6}>
                     <Typography variant="body2" color="textSecondary" align="center">
                       Version <Version /> - <Copyright />
                     </Typography>

@@ -1,4 +1,7 @@
 import * as nodemailer from 'nodemailer'
+import debug from 'debug'
+const log = debug('infinity:Nodemailer:email')
+const logError = log.extend('ERROR', '::')
 
 export class Emailer {
   #transporter
@@ -16,17 +19,33 @@ export class Emailer {
         rejectUnauthorized: false,
       },
     })
+    this.#transporter.verify(function (error) {
+      if (error) {
+        logError('SMTP create transport error.', error)
+      }
+    })
   }
 
   async sendEmail(mailOptions) {
-    return this.#transporter.sendMail(mailOptions)
+    return this.#transporter.sendMail(mailOptions).catch(error => {
+      logError('Transporter sendMail error.', error)
+      return false
+    })
   }
 
   async notifyAdminForNewUser(email, username) {
+    if (!process.env.MAIL_FROM) {
+      logError('Send properties not specified:', process.env.MAIL_FROM)
+      return false
+    }
     await this.sendEmail(notifyAdminNewUserEmailTemplate(email, username))
   }
 
   async notifyUserForSignup(email, username) {
+    if (!process.env.MAIL_FROM || !email) {
+      logError('Send properties not specified:', email, process.env.MAIL_FROM)
+      return false
+    }
     await this.sendEmail(newUserEmailTemplate(email, username))
   }
 }

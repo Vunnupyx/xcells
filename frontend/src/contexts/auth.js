@@ -127,6 +127,11 @@ export const AuthProvider = ({children}) => {
     }
   }, [loginData, setShowLoginDialog, warning])
 
+  const signup = useCallback(() => {
+    setShowSignupDialog(true)
+    setShowLoginDialog(true)
+  }, [setShowSignupDialog, setShowLoginDialog])
+
   // refresh regularly and logout if the session is expired
   useEffect(() => {
     if (isRefreshed && expiresAt) {
@@ -163,9 +168,18 @@ export const AuthProvider = ({children}) => {
     [login],
   )
 
+  const SignupLink = useCallback(
+    linkName => (
+      <Link onClick={signup} href="#">
+        {linkName}
+      </Link>
+    ),
+    [signup],
+  )
+
   const value = useMemo(
-    () => ({auth, userId, logout, login, LoginLink, refresh, isLoggedIn, isRefreshed}),
-    [auth, userId, logout, login, LoginLink, refresh, isLoggedIn, isRefreshed],
+    () => ({auth, userId, logout, login, signup, LoginLink, SignupLink, refresh, isLoggedIn, isRefreshed}),
+    [auth, userId, logout, login, signup, LoginLink, SignupLink, refresh, isLoggedIn, isRefreshed],
   )
 
   if (!isRefreshed) return null

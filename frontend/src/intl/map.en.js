@@ -221,7 +221,7 @@ export default {
   createAccount: 'Create Account',
   signupDialogTitle: 'Thank You For Signing Up!',
   signupDialogMessage:
-    'Thank you for registering! Your account is currently in the waitlist for manual approval. You will receive an email notification once your account has been approved. Please allow up to 24-48 hours for this process. We appreciate your patience and look forward to having you as a user of our product!',
+    '<b>Your account is currently in the waitlist for manual approval.</b> You will receive an email notification once your account has been approved.<br><br><b>We appreciate your patience and look forward to having you as a user of our product!</b>',
 
   authSessionExpired: 'Your session expired. Please login again.',
 
