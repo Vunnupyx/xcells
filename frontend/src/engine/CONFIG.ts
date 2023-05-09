@@ -325,6 +325,15 @@ const CONFIG = {
       permanent: true,
     },
 
+    addTableSettings: {
+      style: {
+        color: '@transparent',
+        borderColor: '@transparent',
+        title: '',
+      },
+      permanent: true,
+    },
+
     addTextSettings: {
       style: {
         color: '@transparent',

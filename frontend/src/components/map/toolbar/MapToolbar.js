@@ -49,6 +49,7 @@ const INTERNAL_MODES = {
   ADD_TEXT: 3,
   ADD_FILE: 4,
   ADD_TEMPLATE: 5,
+  ADD_TABLE: 6,
 }
 
 const toEngineMode = internMode => {
@@ -134,6 +135,15 @@ const MapToolbar = () => {
     setInternMode(createHandleAddModeChange(INTERNAL_MODES.ADD_FRAME))
     writeAddInfo('onAddFrame')
     const {style, permanent} = CONFIG.nodes.addFrameSettings
+    eventManager.setNodeProperties(addNode.current, style, permanent)
+  }
+
+  const onAddTable = () => {
+    setInternMode(createHandleAddModeChange(INTERNAL_MODES.ADD_TABLE))
+    writeAddInfo('onAddTable')
+    const {style, permanent} = CONFIG.nodes.addTableSettings
+    // const innerHTML = <AgGrid />
+    style.title = '<b>value</b>>'
     eventManager.setNodeProperties(addNode.current, style, permanent)
   }
 
@@ -241,6 +251,11 @@ const MapToolbar = () => {
         icon={<AddFrame color={getIconColor(INTERNAL_MODES.ADD_FRAME)} />}
         titleId="toolbarTooltipCreateFrame"
         onClick={onAddFrame}
+      />
+      <TooltipButton
+        icon={<AddFrame color={getIconColor(INTERNAL_MODES.ADD_TABLE)} />}
+        titleId="toolbarTooltipCreateFrame"
+        onClick={onAddTable}
       />
       <TooltipButton
         icon={<TextIncrease color={getIconColor(INTERNAL_MODES.ADD_TEXT)} />}
