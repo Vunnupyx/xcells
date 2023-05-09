@@ -181,6 +181,7 @@ export default {
   buttonOk: 'Ok',
   buttonInvite: 'Invite A Friend',
 
+  OK: 'OK',
   submit: 'Submit',
   delete: 'Delete',
   cookieNote: 'We are using cookies to provide you the best experience possible.',
@@ -204,12 +205,27 @@ export default {
     noLoginData: 'Login data could not be loaded. Do you have a working network connection?',
   },
   loginForgotPassword: 'Forgot password?',
-  loginSignUp: 'Create New Account',
+  loginSignUp: 'Register',
   loginTitle: 'Log In',
-  loginUsername: 'Username',
+  username: 'Username',
+  email: 'Email',
+  password: 'Password',
+  signupTitle: 'Sign Up',
+  usernameRequired: 'Username is required',
+  emailRequired: 'Email is required',
+  invalidEmailAddress: 'Provide a valid email address',
+  passwordRequired: 'Password is required',
+  invalidPassword: 'Must Contain 8 Characters, One Uppercase, One Number and One Special Case Character',
+  alreadyExistAccount: 'Already have an account?',
+  notRegistered: "Don't have an account?",
+  createAccount: 'Create Account',
+  signupDialogTitle: 'Thank You For Signing Up!',
+  signupDialogMessage:
+    '<b>Your account is currently in the waitlist for manual approval.</b> You will receive an email notification once your account has been approved.<br><br><b>We appreciate your patience and look forward to having you as a user of our product!</b>',
 
   authSessionExpired: 'Your session expired. Please login again.',
 
+  signupSuccess: 'User has been registered and is awaiting activation.',
   errorRequestHandling: 'A server error occurred.',
   errorServer: 'A server error occurred. Please try again later.',
   errorLogin: 'Username or password is incorrect.',
@@ -222,6 +238,7 @@ export default {
   errorList: 'Error List',
   error404: 'The page you requested was not found.',
   adminList: 'User Stats',
+  adminWaitlist: 'Waitlist',
 
   clientErrorUserId: 'User ID',
   clientErrorPath: 'Url Path',
@@ -609,6 +626,7 @@ export default {
     mapsFeedback: 'Feedback',
     mapsAdminErrors: 'ADMIN: Errors',
     mapsAdminCRM: 'User Stats',
+    mapsAdminWaitlist: 'Waitlist',
     login: 'Login',
   },
 
@@ -670,6 +688,10 @@ export default {
     crm: {
       userProfile: {
         commentSaveSuccess: 'Your comment was saved successfully',
+      },
+      waitlist: {
+        ActivateAccountSuccess: 'Account has been activated successfully',
+        ActivateAccountError: 'Failed to activate',
       },
     },
   },

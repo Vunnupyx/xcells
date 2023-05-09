@@ -5,6 +5,5 @@ import Link from '@material-ui/core/Link'
 const createLink = url => text => <Link href={url}>{text}</Link>
 
 export const subscribe = createLink('https://infinitymaps.io/shop/')
-export const register = createLink('https://infinitymaps.io/register/')
 
 export const feedback = text => <Link to="/maps/feedback">{text}</Link>
