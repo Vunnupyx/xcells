@@ -101,6 +101,14 @@ const HomeMenuItems = ({open, setOpen}) => (
             <ListItemText primary={<FormattedMessage id="adminList" />} />
           </NavListItemLink>
         </HiddenForOtherRoles>
+        <HiddenForOtherRoles roles={[ROLES.administrator]}>
+          <NavListItemLink to="/maps/admin/waitlist">
+            <WhiteListItemIcon>
+              <BusinessCenterIcon />
+            </WhiteListItemIcon>
+            <ListItemText primary={<FormattedMessage id="adminWaitlist" />} />
+          </NavListItemLink>
+        </HiddenForOtherRoles>
       </List>
       <Divider />
     </Grid>

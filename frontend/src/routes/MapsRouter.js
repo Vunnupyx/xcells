@@ -26,6 +26,7 @@ import Feedback from '../components/pages/Feedback'
 import {useTracking} from '../hooks/useTracking'
 import ImportMapRender from '../components/map/ImportMapRender'
 import CollaborationStoreProvider from '../components/map/collaboration/CollaborationStoreProvider'
+import WaitlistAdmin from '../components/pages/WaitlistAdmin'
 
 const NavigationTracker = () => {
   const {track, setTrackingParameter} = useTracking()
@@ -122,6 +123,12 @@ const MapsRouter = () => {
         <HelmetTitle titleId="pageTitle.mapsAdminCRM" />
         <HomePageLayout>
           <UserProfile />
+        </HomePageLayout>
+      </Route>
+      <Route path={`${path}/admin/waitlist`} exact>
+        <HelmetTitle titleId="pageTitle.mapsAdminWaitlist" />
+        <HomePageLayout>
+          <WaitlistAdmin />
         </HomePageLayout>
       </Route>
       <Route path={`${path}/:mapId/repair`} exact>

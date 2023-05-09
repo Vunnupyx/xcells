@@ -9,16 +9,20 @@ import MuiLink from '@material-ui/core/Link'
 
 import Link from '../wrapped/Link'
 import infinityContent from '../../assets/infinitymaps-app-content-home.svg'
+import useAuth from '../../hooks/useAuth'
 
 const imageStyle = {
   width: '100%',
 }
 
-export const RegisterButton = () => (
-  <Button component={MuiLink} href="https://infinitymaps.io/en/signup/" variant="contained" color="primary">
-    <FormattedMessage id="buttonRegister" />
-  </Button>
-)
+export const RegisterButton = () => {
+  const {signup} = useAuth()
+  return (
+    <Button component={MuiLink} onClick={signup} variant="contained" color="primary">
+      <FormattedMessage id="buttonRegister" />
+    </Button>
+  )
+}
 
 const CallToRegister = () => (
   <Box marginTop={4}>

@@ -7,6 +7,8 @@ import generateAuth from './utils/generateAuth'
 import escapeRegexString from './utils/escapeRegexString'
 
 import {createHash} from 'crypto'
+import {emailer} from '../email'
+import {ROLES} from '../shared/config/constants'
 
 const shaHash = str => {
   const shasum = createHash('sha1')
@@ -43,12 +45,13 @@ const AuthController = {
       }
 
       const usernameRegex = new RegExp(`^${escapeRegexString(username)}$`, 'i')
-      const user = await User.findOne({name: usernameRegex}, {password: 1})
-
+      const user = await User.findOne({name: usernameRegex}, {password: 1, confirmed: 1})
       if (!user) {
         ctx.throw(401, 'User not found.')
       } else if (!(await user.comparePassword(password))) {
         ctx.throw(401, 'Wrong password.')
+      } else if (!user.confirmed) {
+        ctx.throw(403, 'Error: Pending Activation')
       }
 
       auth = generateAuth(await User.findOne({name: usernameRegex}))
@@ -121,6 +124,51 @@ const AuthController = {
       ctx.body = {redirect: false}
     }
   },
+
+  signup: async ctx => {
+    const {username, mail, password} = await ctx.request.json()
+    if (!username || !password || !mail) {
+      ctx.throw(400, 'Username, email and password required.')
+    }
+
+    //simplify checking later on
+    const serializedUsername = username.toLowerCase().replace(/ /g, '')
+    const serializedMail = mail.toLowerCase().replace(/ /g, '')
+
+    if (!serializedUsername || !serializedMail || password.length < 7) {
+      ctx.throw(400, 'Username, email and password required.')
+    }
+    const usernameRegex = new RegExp(`^${escapeRegexString(serializedUsername)}$`, 'i')
+    const mailRegex = new RegExp(`^${escapeRegexString(serializedMail)}$`, 'i')
+
+    const existingUsers = await User.find({$or: [{mail: mailRegex}, {name: usernameRegex}]})
+      .limit(1)
+      .exec()
+
+    if (existingUsers.length > 0) {
+      if (existingUsers[0].name === username) {
+        ctx.throw(400, 'Username already exists.')
+      } else if (existingUsers[0].mail === mail) {
+        ctx.throw(400, 'Email already exists.')
+      }
+    }
+
+    const user = new User({
+      id: username,
+      name: username,
+      mail: mail,
+      password,
+      roles: [ROLES.subscriber],
+      confirmed: false,
+    })
+    await user.save()
+
+    emailer.notifyAdminForNewUser(mail, username)
+    emailer.notifyUserForSignup(mail, username)
+
+    ctx.status = 200
+  },
+
   logout: ctx => {
     const body = {success: true}
 
