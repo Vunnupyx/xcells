@@ -10,7 +10,6 @@ import MapStore from '../store/MapStoreWrite'
 import useAuth from '../hooks/useAuth'
 import useSnackbar from '../hooks/useSnackbar'
 import useApiQuery from '../hooks/useApiQuery'
-import {register} from '../intl/links'
 import MapStoreNone from '../store/MapStoreNone'
 import MapStoreReadOnly from '../store/MapStoreReadOnly'
 import CONFIG from '../engine/CONFIG'
@@ -26,7 +25,7 @@ export const MapStoreContext = createContext()
 const linkToShop = content => <Link href="https://infinitymaps.io/shop/">{content}</Link>
 
 export const MapStoreProvider = ({children}) => {
-  const {auth, userId, isLoggedIn, isRefreshed, LoginLink} = useAuth()
+  const {auth, userId, isLoggedIn, isRefreshed, LoginLink, SignupLink} = useAuth()
   const myUsername = auth.wp_user?.data?.user_login || auth.name || 'anonym'
   const snackbar = useSnackbar()
   const {mapId} = useParams()
@@ -69,7 +68,7 @@ export const MapStoreProvider = ({children}) => {
                 id="mapLoginNeeded"
                 values={{
                   login: LoginLink,
-                  register,
+                  register: SignupLink,
                 }}
               />,
             )

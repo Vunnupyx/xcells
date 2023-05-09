@@ -22,7 +22,7 @@ import ListItemLink from '../../wrapped/ListItemLink'
 import Link from '../../wrapped/Link'
 
 const ProfileMenu = props => {
-  const {auth, logout, login} = useAuth()
+  const {auth, logout, login, signup} = useAuth()
   const username = auth?.wp_user?.data?.user_login || auth?.userId
 
   return (
@@ -58,7 +58,7 @@ const ProfileMenu = props => {
           <ListItemText primary={<FormattedMessage id="userPopoverAppMoreMaps" />} />
         </ListItemLink>
 
-        <ListItem button component="a" href="https://infinitymaps.io/register/">
+        <ListItem button onClick={signup}>
           <ListItemIcon>
             <ContactMailIcon />
           </ListItemIcon>
