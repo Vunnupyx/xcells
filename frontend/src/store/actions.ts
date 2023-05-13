@@ -114,6 +114,7 @@ export const add = (node: NodeContent): MapStoreAction => ({
       height = create.height,
       scale = create.scale,
       title,
+      html,
       color,
       borderColor,
     } = node
@@ -143,6 +144,7 @@ export const add = (node: NodeContent): MapStoreAction => ({
     }
 
     if (height) doc.nodes[id].height = height
+    if (html) doc.nodes[id].html = html
 
     if (parent) {
       if (parent === id) {

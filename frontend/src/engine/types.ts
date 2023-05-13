@@ -48,6 +48,7 @@ export type NodeContent = RenderNodeCandidate & {
   imagePosition?: ImagePositions
   file?: ObjectId
   title?: string
+  html?: string
   color?: string
   borderColor?: string
   scale?: number

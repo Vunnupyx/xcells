@@ -327,8 +327,7 @@ const CONFIG = {
 
     addTableSettings: {
       style: {
-        color: '@transparent',
-        borderColor: '@transparent',
+        imagePosition: IMAGE_POSITIONS.body,
         title: '',
       },
       permanent: true,
