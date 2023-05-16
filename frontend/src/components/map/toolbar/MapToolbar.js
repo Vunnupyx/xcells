@@ -5,6 +5,7 @@ import Drawer from '@material-ui/core/Drawer'
 import UndoIcon from '@material-ui/icons/Undo'
 import RedoIcon from '@material-ui/icons/Redo'
 import PanToolIcon from '@material-ui/icons/PanTool'
+import TableChartOutlined from '@material-ui/icons/TableChartOutlined'
 import AddBox from '@material-ui/icons/AddBox'
 import {FormattedMessage} from 'react-intl'
 import {renderToString} from 'react-dom/server'
@@ -254,8 +255,8 @@ const MapToolbar = () => {
         onClick={onAddFrame}
       />
       <TooltipButton
-        icon={<AddFrame color={getIconColor(INTERNAL_MODES.ADD_TABLE)} />}
-        titleId="toolbarTooltipCreateFrame"
+        icon={<TableChartOutlined color={getIconColor(INTERNAL_MODES.ADD_TABLE)} />}
+        titleId="toolbarTooltipCreateTable"
         onClick={onAddTable}
       />
       <TooltipButton

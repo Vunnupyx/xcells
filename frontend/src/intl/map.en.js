@@ -294,6 +294,7 @@ export default {
   toolbarTooltipNavigationMode: 'Navigation Mode: Navigate through your map (Default).',
   toolbarTooltipCreateNodeMode: 'Add Card (Ctrl/Cmd+Shift+Click or Drag)',
   toolbarTooltipCreateFrame: 'Add Frame (transparent background)',
+  toolbarTooltipCreateTable: 'Add Table',
   toolbarTooltipCreateText: 'Add Text (transparent background and border)',
   toolbarTooltipCreateFile: 'Add File or Image',
   toolbarTooltipInsertTemplate: 'Insert Template',

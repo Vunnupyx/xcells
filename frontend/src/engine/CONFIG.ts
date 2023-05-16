@@ -329,6 +329,8 @@ const CONFIG = {
       style: {
         imagePosition: IMAGE_POSITIONS.body,
         title: '',
+        width: GRID_SIZE * 26,
+        height: GRID_SIZE * 8,
       },
       permanent: true,
     },
