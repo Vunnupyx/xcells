@@ -154,7 +154,7 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
       const {width: textureWidth, height: textureHeight} = texture.baseTexture
       if (imagePosition === IMAGE_POSITIONS.body) {
         const innerHeightBody = height - headerHeight - (height !== headerHeight ? borderSize : 0)
-        const isImageHigher = true
+        const isImageHigher = innerWidth / textureWidth > innerHeightBody / textureHeight
 
         if (isImageHigher) {
           this.width = innerHeightBody * (textureWidth / textureHeight)
