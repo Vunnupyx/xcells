@@ -19,6 +19,7 @@ import useInteractionManager from '../../engine/useInteractionManager'
 import useFileUpload from '../../../hooks/useFileUpload'
 import AddCheckboxItem from '../toolbar/AddCheckboxItem'
 import AddTagMenuItem from '../toolbar/AddTagMenuItem'
+import EditTableMenuItem from '../toolbar/EditTableMenuItem'
 
 const POPPER_NAMES = {
   border: 'border',
@@ -110,6 +111,7 @@ const NodeMenu = ({open, onClose, ...rest}) => {
         {/*  <ListItemIcon /> */}
         {/*  Paste */}
         {/* </MenuItem> */}
+        <EditTableMenuItem />
         <MenuItem
           onClick={() => {
             control.duplicateNode()

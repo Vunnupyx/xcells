@@ -151,6 +151,9 @@ export default {
       title: 'Add Tag To Card',
       create: 'Create and add a new tag ...',
     },
+    editTable: {
+      title: 'Edit Table',
+    },
   },
 
   button: {
@@ -385,6 +388,7 @@ export default {
   toolbarMenuReorgInfinity: 'Infinity',
 
   toolbarMenu: {
+    editTable: 'Edit Table',
     checkBox: {
       add: 'Add Checkbox',
       remove: 'Remove Checkbox',

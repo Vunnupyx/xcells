@@ -86,6 +86,12 @@ export type NodeTagData = {
   color: string
 }
 
+export type NodeTableData = {
+  id: string
+  columnDefs: object
+  rowData: object
+}
+
 export type NodeTagDatas = NodeTagData[]
 
 export type MapContentData = {

@@ -180,6 +180,19 @@ export const rescale = (node: NodeData): MapStoreAction => ({
   },
 })
 
+export const editTable = (node: NodeData): MapStoreAction => ({
+  node,
+  name: 'nodeEditTable',
+  reducer: doc => {
+    const {id, html} = node
+    if (html && doc.nodes[id].html !== html) {
+      doc.nodes[id].html = html
+    } else if (!html && doc.nodes[id].html) {
+      delete doc.nodes[id].html
+    }
+  },
+})
+
 export const setImage = (node: NodeData): MapStoreAction => ({
   node,
   name: 'nodeSetImage',
