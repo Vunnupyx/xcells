@@ -26,7 +26,7 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const EditTableDialog = ({open, onClose}) => {
+const EditTableDialog = ({gridOptions, open, onClose}) => {
   const classes = useStyles()
   const gridRef = useRef()
   const {editTable} = useEngineControl()
@@ -62,9 +62,9 @@ const EditTableDialog = ({open, onClose}) => {
 
   const onSubmit = useCallback(() => {
     gridRef.current.api.stopEditing()
-    editTable({id: 'id', columnDefs, rowData})
+    editTable({columnDefs, rowData})
     trackAction('nodeEditTable')
-  }, [columnDefs, editTable, rowData])
+  }, [columnDefs, editTable, gridOptions, rowData])
 
   return (
     <Dialog

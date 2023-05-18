@@ -16,7 +16,11 @@ const EditTableMenuItem = () => {
   const isDisable = !lastSelectedNode || lastSelectedNode.isRoot
 
   return (
-    <MenuItem button disabled={isDisable} onClick={() => openDialog(EditTableDialog)}>
+    <MenuItem
+      button
+      disabled={isDisable}
+      onClick={() => openDialog(EditTableDialog, {gridOptions: lastSelectedNode.gridOptions})}
+    >
       <ListItemIcon>
         <EditSharpIcon />
       </ListItemIcon>

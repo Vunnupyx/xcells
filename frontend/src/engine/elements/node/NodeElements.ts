@@ -31,7 +31,7 @@ type ElementMapping = {
   graphics: NodeGraphics
   background: NodeBackground
   text?: NodeText
-  html?: NodeHtml
+  table?: NodeHtml
   ghostContainer?: NodeGhostContainer
   children?: NodeChildren
   mask?: NodeMask
@@ -133,7 +133,7 @@ class NodeElements extends Elements {
     this.redrawDownloadHandle()
     this.redrawHeaderHandle()
     this.redrawResizeHandle()
-    this.redrawHtml()
+    this.redrawTable()
 
     this.attachMasks()
 
@@ -197,17 +197,17 @@ class NodeElements extends Elements {
     }
   }
 
-  redrawHtml(): void {
+  redrawTable(): void {
     const {node, elements} = this
     if (NodeHtml.isShown(node)) {
-      if (!elements.html) {
-        elements.html = new NodeHtml(node)
-        this.addChild(elements.html)
+      if (!elements.table) {
+        elements.table = new NodeHtml(node)
+        this.addChild(elements.table)
       }
-      elements.html.redraw(this.getDetailInfo())
-    } else if (elements.html) {
-      this.removeChild(elements.html)
-      delete elements.html
+      elements.table.redraw(this.getDetailInfo())
+    } else if (elements.table) {
+      this.removeChild(elements.table)
+      delete elements.table
     }
   }
 

@@ -8,7 +8,6 @@ import PanToolIcon from '@material-ui/icons/PanTool'
 import TableChartOutlined from '@material-ui/icons/TableChartOutlined'
 import AddBox from '@material-ui/icons/AddBox'
 import {FormattedMessage} from 'react-intl'
-import {renderToString} from 'react-dom/server'
 import AddFrame from '../../../icons/AddFrame'
 import TextIncrease from '../../../icons/TextIncrease'
 import UploadFile from '../../../icons/UploadFile'
@@ -27,7 +26,6 @@ import {hasTouchscreen} from '../../../utils/browserDetection'
 import useSnackbar from '../../../hooks/useSnackbar'
 import useInteractionManager from '../../engine/useInteractionManager'
 import useMapStore from '../../../hooks/useMapStore'
-import Grid from '../grid/Grid'
 
 const useDrawerStyles = makeStyles(theme => ({
   paper: {
@@ -145,7 +143,7 @@ const MapToolbar = () => {
     setInternMode(createHandleAddModeChange(INTERNAL_MODES.ADD_TABLE))
     writeAddInfo('onAddTable')
     const {style, permanent} = CONFIG.nodes.addTableSettings
-    style.html = renderToString(<Grid />)
+    style.gridOptions = null
     eventManager.setNodeProperties(addNode.current, style, permanent)
   }
 

@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js'
 import debug from 'debug'
 
 import Color from 'color'
+import {GridOptions} from 'ag-grid-community'
 import {generateNodeId} from '../shared/utils/generateId'
 import NodeElements from './elements/node/NodeElements'
 
@@ -67,7 +68,7 @@ class PixiNode extends AbstractPixiNode implements NodeData {
 
   _title: string | null = null
 
-  _html: string | null = null
+  _gridOptions: GridOptions | null | undefined = null
 
   _depth: number | null = null
 
@@ -186,10 +187,6 @@ class PixiNode extends AbstractPixiNode implements NodeData {
 
   redrawContainer(): void {
     this.elements.redrawContainer()
-  }
-
-  redrawHtml(): void {
-    this.elements.redrawHtml()
   }
 
   redraw(): void {
@@ -480,7 +477,7 @@ class PixiNode extends AbstractPixiNode implements NodeData {
     if (this.getBackgroundColor().alpha() > 0 || (this.color && this.color !== '@transparent')) return true
     if (this.image) return true
     if (this.title) return true
-    if (this.html) return true
+    if (this.gridOptions) return true
     if (!this.childNodes || this.childNodes.size <= 0) return false
     return [...this.childNodes].some(node => node.isVisible())
   }
@@ -663,13 +660,12 @@ class PixiNode extends AbstractPixiNode implements NodeData {
     this.childrenRedrawEdges()
   }
 
-  get html(): string | undefined {
-    return this._html !== null ? this._html : this.storeNode.html
+  get gridOptions(): GridOptions | undefined {
+    return this._gridOptions !== null ? this._gridOptions : this.storeNode.gridOptions
   }
 
-  set html(html: string | undefined) {
-    this._html = html !== undefined ? html : null
-    this.redrawHtml()
+  set gridOptions(gridOptions: GridOptions | undefined) {
+    this._gridOptions = gridOptions !== undefined ? gridOptions : null
   }
 
   get imagePosition(): ImagePositions | undefined {
@@ -824,7 +820,7 @@ class PixiNode extends AbstractPixiNode implements NodeData {
       (this._scale !== null && this._scale !== storeNode.scale) ||
       (this._image !== null && this._image !== storeNode.image) ||
       (!(this._title === '' || !this._title) && this._title !== storeNode.title) ||
-      (!(this._html === '' || !this._html) && this._html !== storeNode.html) ||
+      (!(this._gridOptions === '' || !this._gridOptions) && this._gridOptions !== storeNode.gridOptions) ||
       (this._file !== null && this._file !== storeNode.file) ||
       (this._height !== null && this._height !== storeNode.height) ||
       (this._width !== null && this._width !== storeNode.width) ||
@@ -845,7 +841,7 @@ class PixiNode extends AbstractPixiNode implements NodeData {
     if (this.storeNode.title === this._title) this._title = null
     this._scale = null
     this._image = null
-    this._html = null
+    this._gridOptions = null
     this._file = null
     this._height = null
     this._width = null

@@ -1,6 +1,7 @@
 import type * as PIXI from 'pixi.js'
 import type {List} from 'automerge'
 
+import {GridOptions} from 'ag-grid-community'
 import type PixiNode from './PixiNode'
 import type PixiEdge from './PixiEdge'
 import type PointerActionClick from './events/actions/PointerActionClick'
@@ -48,7 +49,7 @@ export type NodeContent = RenderNodeCandidate & {
   imagePosition?: ImagePositions
   file?: ObjectId
   title?: string
-  html?: string
+  gridOptions?: GridOptions
   color?: string
   borderColor?: string
   scale?: number
@@ -84,12 +85,6 @@ export type NodeTagData = {
   id: NodeTagId
   name: string
   color: string
-}
-
-export type NodeTableData = {
-  id: string
-  columnDefs: object
-  rowData: object
 }
 
 export type NodeTagDatas = NodeTagData[]

@@ -114,7 +114,7 @@ export const add = (node: NodeContent): MapStoreAction => ({
       height = create.height,
       scale = create.scale,
       title,
-      html,
+      gridOptions,
       color,
       borderColor,
     } = node
@@ -144,7 +144,7 @@ export const add = (node: NodeContent): MapStoreAction => ({
     }
 
     if (height) doc.nodes[id].height = height
-    if (html) doc.nodes[id].html = html
+    if (gridOptions) doc.nodes[id].gridOptions = gridOptions
 
     if (parent) {
       if (parent === id) {
@@ -184,11 +184,11 @@ export const editTable = (node: NodeData): MapStoreAction => ({
   node,
   name: 'nodeEditTable',
   reducer: doc => {
-    const {id, html} = node
-    if (html && doc.nodes[id].html !== html) {
-      doc.nodes[id].html = html
-    } else if (!html && doc.nodes[id].html) {
-      delete doc.nodes[id].html
+    const {id, gridOptions} = node
+    if (gridOptions && doc.nodes[id].gridOptions !== gridOptions) {
+      doc.nodes[id].gridOptions = gridOptions
+    } else if (!gridOptions && doc.nodes[id].gridOptions) {
+      delete doc.nodes[id].gridOptions
     }
   },
 })

@@ -1,5 +1,6 @@
 import debug from 'debug'
 
+import {GridOptions} from 'ag-grid-community'
 import {
   addTemplate,
   attachTag,
@@ -22,16 +23,7 @@ import {
 import rectInsideRect from './utils/intersect/rectInsideRect'
 
 import {duplicateNode} from '../store/utils'
-import {
-  ImagePositions,
-  MapContentData,
-  MapStoreAction,
-  MapStoreActions,
-  NodeTagId,
-  NODE_VISIBLE,
-  NodeId,
-  NodeTableData,
-} from './types'
+import {ImagePositions, MapContentData, MapStoreAction, MapStoreActions, NodeTagId, NODE_VISIBLE, NodeId} from './types'
 import CONFIG from './CONFIG'
 
 import type PixiRenderEngine from './PixiRenderEngine'
@@ -370,12 +362,12 @@ class RenderEngineControl {
     )
   }
 
-  editTable = (table: NodeTableData): void => {
+  editTable = (gridOptions: GridOptions): void => {
     const {dispatch} = this.engine.store
     const {selectedNodes} = this.engine.eventManager
     dispatch(
       [...selectedNodes].map(node => {
-        node.html = 'table'
+        node.gridOptions = gridOptions
         return editTable(node)
       }),
     )

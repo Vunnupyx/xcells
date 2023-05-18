@@ -8,7 +8,6 @@ enum NODE_ELEMENT_TYPES {
   image = 'image',
   children = 'children',
   text = 'text',
-  html = 'html',
   graphics = 'graphics',
   headerHandle = 'headerHandle',
   downloadHandle = 'downloadHandle',
