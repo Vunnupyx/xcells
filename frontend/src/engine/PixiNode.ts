@@ -76,6 +76,8 @@ class PixiNode extends AbstractPixiNode implements NodeData {
 
   _checked?: boolean
 
+  _dirty?: boolean
+
   state: State = {
     isHighlighted: false,
     isSelected: false,
@@ -982,6 +984,14 @@ class PixiNode extends AbstractPixiNode implements NodeData {
 
   set checked(value: boolean | undefined) {
     this._checked = value
+  }
+
+  get dirty(): boolean | undefined {
+    return typeof this._dirty === 'boolean' ? this._dirty : this.storeNode.dirty
+  }
+
+  set dirty(value: boolean | undefined) {
+    this._dirty = value
   }
 
   hasCheckBox() {

@@ -55,6 +55,7 @@ export type NodeContent = RenderNodeCandidate & {
   scale?: number
   tags?: string[]
   checked?: boolean
+  dirty?: boolean
 }
 
 export type NodeData = NodeContent & {

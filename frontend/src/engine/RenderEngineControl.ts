@@ -367,6 +367,7 @@ class RenderEngineControl {
     const {selectedNodes} = this.engine.eventManager
     dispatch(
       [...selectedNodes].map(node => {
+        node.dirty = false
         node.gridOptions = gridOptions
         return editTable(node)
       }),

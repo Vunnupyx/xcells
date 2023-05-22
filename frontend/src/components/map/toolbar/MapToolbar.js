@@ -140,10 +140,34 @@ const MapToolbar = () => {
   }
 
   const onAddTable = () => {
+    const gridOptions = {
+      rowData: [
+        {
+          id: 0,
+          name: 'Username',
+          type: 'Scripted',
+          language: 'English',
+          genres: 'Nature',
+          runtime: '30',
+          status: 'Ended',
+        },
+        {
+          id: 1,
+          name: 'Username',
+          type: 'Scripted',
+          language: 'English',
+          genres: 'Nature',
+          runtime: '30',
+          status: 'Ended',
+        },
+      ],
+      columnDefs: [{field: 'name'}, {field: 'type'}, {field: 'language'}, {field: 'genres'}, {field: 'runtime'}],
+    }
+
     setInternMode(createHandleAddModeChange(INTERNAL_MODES.ADD_TABLE))
     writeAddInfo('onAddTable')
     const {style, permanent} = CONFIG.nodes.addTableSettings
-    style.gridOptions = null
+    style.gridOptions = gridOptions
     eventManager.setNodeProperties(addNode.current, style, permanent)
   }
 

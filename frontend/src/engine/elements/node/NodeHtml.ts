@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js'
-import {Grid, GridOptions} from 'ag-grid-community'
+import {Grid} from 'ag-grid-community'
 import {IMAGE_POSITIONS} from '../../../shared/config/constants'
 import NODE_ELEMENT_TYPES from './NODE_ELEMENT_TYPES'
 import CONFIG from '../../CONFIG'
@@ -9,6 +9,8 @@ import NODE_ELEMENT_ZINDEX from './NODE_ELEMENT_ZINDEX'
 import {IDisplayObjectTypeCategoryNode} from '../types'
 import NODE_DETAILS, {NodeDetail} from './NODE_DETAILS'
 import NODE_DETAIL_LEVELS from './NODE_DETAIL_LEVELS'
+
+import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-alpine.css'
 
 class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
@@ -28,13 +30,13 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
 
   private _domElement: HTMLElement
 
+  private _styleElement: HTMLElement
+
   private _svgRoot: SVGSVGElement
 
   private _image: HTMLImageElement
 
   private _loadImage: HTMLImageElement
-
-  private _gridOptions: GridOptions | undefined = undefined
 
   private lastNodeDetails: NodeDetail = NODE_DETAILS[NODE_DETAIL_LEVELS.normal]
 
@@ -54,26 +56,50 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
     const svgRoot = document.createElementNS(nssvg, 'svg')
     const foreignObject = document.createElementNS(nssvg, 'foreignObject')
     const domElement = document.createElementNS(nsxhtml, 'div')
-
+    const styleElement = document.createElementNS(nsxhtml, 'style')
     // Arbitrary max size
+    svgRoot.setAttribute('width', '100%')
+    svgRoot.setAttribute('height', '100%')
     foreignObject.setAttribute('width', '100%')
     foreignObject.setAttribute('height', '100%')
     svgRoot.appendChild(foreignObject)
+    foreignObject.appendChild(styleElement)
     foreignObject.appendChild(domElement)
 
     this.maxWidth = NodeHtml.defaultMaxWidth
     this.maxHeight = NodeHtml.defaultMaxHeight
     this._domElement = domElement
+    this._styleElement = styleElement
     this._svgRoot = svgRoot
     this._image = image
     this._loadImage = new Image()
   }
 
   measureHtml() {
-    Object.assign(this._domElement, {
-      style: 'width: 100%; height: 100%',
-    })
-    new Grid(this._domElement, this._gridOptions || {})
+    const {gridOptions} = this.node
+    this._domElement.innerHTML = ''
+    const tableColumns = gridOptions?.columnDefs?.length
+    if (tableColumns) {
+      const tableWidth = tableColumns * 200 + 2
+      const tableHeight = (gridOptions?.rowData?.length || 1) * 60 + 15
+      Object.assign(this._domElement, {
+        style: `width: ${tableWidth}px; height: ${tableHeight}px;`,
+        className: 'ag-theme-alpine',
+      })
+    }
+    // eslint-disable-next-line no-new
+    new Grid(this._domElement, {columnDefs: gridOptions?.columnDefs, rowData: gridOptions?.rowData})
+
+    const {styleSheets} = document
+    let cssStyles = ''
+
+    for (let i = 0; i < styleSheets.length; i += 1) {
+      for (let j = 0; j < styleSheets[i].cssRules.length; j += 1) {
+        const cssRuleStr = styleSheets[i].cssRules[j].cssText
+        cssStyles += cssRuleStr
+      }
+    }
+    this._styleElement.textContent = cssStyles
 
     // Measure the contents using the shadow DOM
     document.body.appendChild(this._svgRoot)
@@ -93,11 +119,9 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
   }
 
   async updateImage() {
-    const {_gridOptions: lastLoadedGridOptions, _image: image, _loadImage: loadImage} = this
-    const {gridOptions} = this.node
-
-    if (gridOptions === lastLoadedGridOptions) return
-    this._gridOptions = gridOptions
+    const {_image: image, _loadImage: loadImage} = this
+    const {dirty} = this.node
+    if (dirty) return
 
     const {width, height} = this.measureHtml()
     // eslint-disable-next-line no-multi-assign
@@ -105,6 +129,7 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
     // eslint-disable-next-line no-multi-assign
     this.texture.baseTexture.height = image.height = loadImage.height = Math.ceil(Math.max(1, height))
 
+    // console.log(dirty)
     if (!this._loading) {
       this._loading = true
       await new Promise<void>(resolve => {
@@ -118,8 +143,9 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
           image.src = loadImage.src
           loadImage.onload = null
           loadImage.src = ''
+          this.node.dirty = true
           if (this.texture.baseTexture.valid) {
-            await this.texture.baseTexture.resource.load()
+            this.texture.baseTexture.resource.update()
           }
           resolve()
         }

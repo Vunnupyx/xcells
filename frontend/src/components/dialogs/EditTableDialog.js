@@ -4,8 +4,6 @@ import Button from '@material-ui/core/Button'
 import {AgGridReact} from 'ag-grid-react'
 import {FormattedMessage} from 'react-intl'
 
-import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
 import makeStyles from '@material-ui/styles/makeStyles'
 import useEngineControl from '../engine/useEngineControl'
 import {trackAction} from '../../contexts/tracking'
@@ -30,41 +28,12 @@ const EditTableDialog = ({gridOptions, open, onClose}) => {
   const classes = useStyles()
   const gridRef = useRef()
   const {editTable} = useEngineControl()
-  const rowData = [
-    {
-      id: 0,
-      name: 'Username',
-      type: 'Scripted',
-      language: 'English',
-      genres: 'Nature',
-      runtime: '30',
-      status: 'Ended',
-    },
-    {
-      id: 1,
-      name: 'Username',
-      type: 'Scripted',
-      language: 'English',
-      genres: 'Nature',
-      runtime: '30',
-      status: 'Ended',
-    },
-  ]
-
-  const columnDefs = [
-    {field: 'name'},
-    {field: 'type'},
-    {field: 'language'},
-    {field: 'genres'},
-    {field: 'runtime'},
-    {field: 'status'},
-  ]
 
   const onSubmit = useCallback(() => {
     gridRef.current.api.stopEditing()
-    editTable({columnDefs, rowData})
+    editTable(gridOptions)
     trackAction('nodeEditTable')
-  }, [columnDefs, editTable, gridOptions, rowData])
+  }, [editTable, gridOptions])
 
   return (
     <Dialog
@@ -81,8 +50,7 @@ const EditTableDialog = ({gridOptions, open, onClose}) => {
         <AgGridReact
           ref={gridRef}
           className="ag-theme-alpine"
-          columnDefs={columnDefs}
-          rowData={rowData}
+          gridOptions={gridOptions}
           defaultColDef={defaultColDef}
         />
       </DialogContent>
