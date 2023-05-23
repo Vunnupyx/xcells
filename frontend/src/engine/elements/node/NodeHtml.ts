@@ -81,14 +81,18 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
     const tableColumns = gridOptions?.columnDefs?.length
     if (tableColumns) {
       const tableWidth = tableColumns * 200 + 2
-      const tableHeight = (gridOptions?.rowData?.length || 1) * 60 + 15
+      const tableHeight = (gridOptions?.rowData?.length || 1) * 43 + 45
       Object.assign(this._domElement, {
         style: `width: ${tableWidth}px; height: ${tableHeight}px;`,
         className: 'ag-theme-alpine',
       })
     }
     // eslint-disable-next-line no-new
-    new Grid(this._domElement, {columnDefs: gridOptions?.columnDefs, rowData: gridOptions?.rowData})
+    new Grid(this._domElement, {
+      columnDefs: gridOptions?.columnDefs,
+      rowData: gridOptions?.rowData,
+      rowBuffer: 1000,
+    })
 
     const {styleSheets} = document
     let cssStyles = ''
@@ -125,11 +129,10 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
 
     const {width, height} = this.measureHtml()
     // eslint-disable-next-line no-multi-assign
-    this.texture.baseTexture.width = image.width = loadImage.width = Math.ceil(Math.max(1, width))
+    image.width = loadImage.width = Math.ceil(Math.max(1, width))
     // eslint-disable-next-line no-multi-assign
-    this.texture.baseTexture.height = image.height = loadImage.height = Math.ceil(Math.max(1, height))
+    image.height = loadImage.height = Math.ceil(Math.max(1, height))
 
-    // console.log(dirty)
     if (!this._loading) {
       this._loading = true
       await new Promise<void>(resolve => {

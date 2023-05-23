@@ -184,12 +184,10 @@ export const editTable = (node: NodeData): MapStoreAction => ({
   node,
   name: 'nodeEditTable',
   reducer: doc => {
-    const {id, gridOptions, dirty} = node
+    const {id, gridOptions} = node
     if (gridOptions && doc.nodes[id].gridOptions !== gridOptions) {
-      doc.nodes[id].dirty = dirty
       doc.nodes[id].gridOptions = gridOptions
     } else if (!gridOptions && doc.nodes[id].gridOptions) {
-      delete doc.nodes[id].dirty
       delete doc.nodes[id].gridOptions
     }
   },

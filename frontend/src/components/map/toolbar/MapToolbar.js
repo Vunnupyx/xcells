@@ -143,22 +143,18 @@ const MapToolbar = () => {
     const gridOptions = {
       rowData: [
         {
-          id: 0,
           name: 'Username',
           type: 'Scripted',
           language: 'English',
           genres: 'Nature',
           runtime: '30',
-          status: 'Ended',
         },
         {
-          id: 1,
           name: 'Username',
           type: 'Scripted',
           language: 'English',
           genres: 'Nature',
           runtime: '30',
-          status: 'Ended',
         },
       ],
       columnDefs: [{field: 'name'}, {field: 'type'}, {field: 'language'}, {field: 'genres'}, {field: 'runtime'}],

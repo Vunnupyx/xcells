@@ -111,7 +111,6 @@ const NodeMenu = ({open, onClose, ...rest}) => {
         {/*  <ListItemIcon /> */}
         {/*  Paste */}
         {/* </MenuItem> */}
-        <EditTableMenuItem />
         <MenuItem
           onClick={() => {
             control.duplicateNode()
@@ -125,6 +124,7 @@ const NodeMenu = ({open, onClose, ...rest}) => {
           </ListItemIcon>
           <FormattedMessage id="toolbarMenuDuplicate" />
         </MenuItem>
+        <EditTableMenuItem />
         <MenuItem
           onClick={() => {
             control.removeSelected()

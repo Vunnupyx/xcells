@@ -667,7 +667,7 @@ class PixiNode extends AbstractPixiNode implements NodeData {
   }
 
   set gridOptions(gridOptions: GridOptions | undefined) {
-    this._gridOptions = gridOptions !== undefined ? gridOptions : null
+    this._gridOptions = gridOptions
   }
 
   get imagePosition(): ImagePositions | undefined {
@@ -822,7 +822,7 @@ class PixiNode extends AbstractPixiNode implements NodeData {
       (this._scale !== null && this._scale !== storeNode.scale) ||
       (this._image !== null && this._image !== storeNode.image) ||
       (!(this._title === '' || !this._title) && this._title !== storeNode.title) ||
-      (!(this._gridOptions === '' || !this._gridOptions) && this._gridOptions !== storeNode.gridOptions) ||
+      (this._gridOptions !== null && this._gridOptions !== storeNode.gridOptions) ||
       (this._file !== null && this._file !== storeNode.file) ||
       (this._height !== null && this._height !== storeNode.height) ||
       (this._width !== null && this._width !== storeNode.width) ||

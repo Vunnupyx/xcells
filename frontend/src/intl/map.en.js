@@ -153,6 +153,9 @@ export default {
     },
     editTable: {
       title: 'Edit Table',
+      add: 'Add',
+      delete: 'Delete',
+      applyChanges: 'Apply Changes',
     },
   },
 
