@@ -12,6 +12,9 @@ import {clone} from '../../utils/object'
 const defaultColDef = {
   editable: true,
   resizable: true,
+  sortable: true,
+  filter: 'agTextColumnFilter',
+  rowDrag: true,
 }
 
 const useStyles = makeStyles(theme => ({
@@ -22,43 +25,49 @@ const useStyles = makeStyles(theme => ({
   },
   dialog: {
     width: '100%',
-    height: '50%',
+    maxWidth: '90vw',
   },
 }))
 
 const EditTableDialog = ({gridOptions, open, onClose}) => {
   const classes = useStyles()
   const [gridApi, setGridApi] = React.useState(null)
+  const [columnApi, setColumnApi] = React.useState(null)
   const {editTable} = useEngineControl()
 
   const onSubmit = useCallback(() => {
     gridApi.stopEditing()
-    editTable({rowData: clone(gridOptions.rowData), columnDefs: clone(gridOptions.columnDefs)})
+    editTable({
+      rowData: clone(gridOptions.rowData),
+      columnDefs: clone(gridOptions.columnDefs),
+      filterModel: gridApi.getFilterModel(),
+      columnState: columnApi.getColumnState(),
+    })
     trackAction('nodeEditTable')
-  }, [editTable, gridApi, gridOptions.columnDefs, gridOptions.rowData])
+    onClose()
+  }, [gridApi, columnApi, editTable, gridOptions.columnDefs, gridOptions.rowData, onClose])
 
   const onGridReady = params => {
     setGridApi(params.api)
+    setColumnApi(params.columnApi)
+    params.api.sizeColumnsToFit()
+  }
+
+  const onSaveGridRow = () => {
+    const rowData = []
+    gridApi.forEachNode(node => rowData.push(node.data))
+    gridOptions.rowData = rowData
   }
 
   const onDeleteRow = () => {
     const selectedRow = gridApi.getSelectedRows()
     gridApi.applyTransaction({remove: selectedRow})
-    const newData = []
-    gridApi.forEachNode(node => newData.push(node.data))
-
-    gridOptions.rowData = newData
-    gridApi.setRowData(gridOptions.rowData)
+    onSaveGridRow()
   }
 
   const onAddRow = () => {
     gridApi.applyTransaction({add: [{}]})
-
-    const newData = []
-    gridApi.forEachNode(node => newData.push(node.data))
-
-    gridOptions.rowData = newData
-    gridApi.setRowData(gridOptions.rowData)
+    onSaveGridRow()
   }
 
   return (
@@ -83,7 +92,13 @@ const EditTableDialog = ({gridOptions, open, onClose}) => {
           className="ag-theme-alpine"
           gridOptions={gridOptions}
           rowSelection="multiple"
+          domLayout="autoHeight"
           singleClickEdit
+          enableMultiRowDragging
+          rowDragManaged
+          stopEditingWhenGridLosesFocus
+          suppressDragLeaveHidesColumns
+          onRowDragEnd={onSaveGridRow}
           defaultColDef={defaultColDef}
           onGridReady={onGridReady}
         />

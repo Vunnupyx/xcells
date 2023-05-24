@@ -1,6 +1,5 @@
 import debug from 'debug'
 
-import {GridOptions} from 'ag-grid-community'
 import {
   addTemplate,
   attachTag,
@@ -23,7 +22,16 @@ import {
 import rectInsideRect from './utils/intersect/rectInsideRect'
 
 import {duplicateNode} from '../store/utils'
-import {ImagePositions, MapContentData, MapStoreAction, MapStoreActions, NodeTagId, NODE_VISIBLE, NodeId} from './types'
+import {
+  ImagePositions,
+  MapContentData,
+  MapStoreAction,
+  MapStoreActions,
+  NodeTagId,
+  NODE_VISIBLE,
+  NodeId,
+  GridOptions,
+} from './types'
 import CONFIG from './CONFIG'
 
 import type PixiRenderEngine from './PixiRenderEngine'

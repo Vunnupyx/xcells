@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js'
-import {Grid} from 'ag-grid-community'
+import {Grid, GridOptions} from 'ag-grid-community'
 import {IMAGE_POSITIONS} from '../../../shared/config/constants'
 import NODE_ELEMENT_TYPES from './NODE_ELEMENT_TYPES'
 import CONFIG from '../../CONFIG'
@@ -29,6 +29,8 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
   private _loading = false
 
   private _domElement: HTMLElement
+
+  private _gridOptions: GridOptions
 
   private _styleElement: HTMLElement
 
@@ -73,6 +75,7 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
     this._svgRoot = svgRoot
     this._image = image
     this._loadImage = new Image()
+    this._gridOptions = {}
   }
 
   measureHtml() {
@@ -87,11 +90,22 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
         className: 'ag-theme-alpine',
       })
     }
-    // eslint-disable-next-line no-new
-    new Grid(this._domElement, {
+
+    Object.assign(this._gridOptions, {
+      defaultColDef: {
+        sortable: true,
+      },
       columnDefs: gridOptions?.columnDefs,
       rowData: gridOptions?.rowData,
       rowBuffer: 1000,
+    })
+
+    // eslint-disable-next-line no-new
+    new Grid(this._domElement, this._gridOptions)
+    this._gridOptions.api?.setFilterModel(gridOptions?.filterModel)
+    this._gridOptions.columnApi?.applyColumnState({
+      state: gridOptions?.columnState,
+      applyOrder: true,
     })
 
     const {styleSheets} = document

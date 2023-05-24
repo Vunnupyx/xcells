@@ -1,7 +1,6 @@
 import type * as PIXI from 'pixi.js'
 import type {List} from 'automerge'
-
-import {GridOptions} from 'ag-grid-community'
+import {ColumnState} from 'ag-grid-community'
 import type PixiNode from './PixiNode'
 import type PixiEdge from './PixiEdge'
 import type PointerActionClick from './events/actions/PointerActionClick'
@@ -41,6 +40,16 @@ export type RenderNodeCandidate = {
   parent?: NodeId
   parentNode?: PixiNode
 }
+/* eslint-disable */
+export interface GridOptions {
+  rowData: any[] | null
+  columnDefs: any[] | null
+  filterModel: {
+    [key: string]: any
+  }
+  columnState: ColumnState[]
+}
+/* eslint-enable */
 
 export type NodeContent = RenderNodeCandidate & {
   id?: NodeId
