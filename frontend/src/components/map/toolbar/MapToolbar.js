@@ -5,6 +5,7 @@ import Drawer from '@material-ui/core/Drawer'
 import UndoIcon from '@material-ui/icons/Undo'
 import RedoIcon from '@material-ui/icons/Redo'
 import PanToolIcon from '@material-ui/icons/PanTool'
+import TableChartOutlined from '@material-ui/icons/TableChartOutlined'
 import AddBox from '@material-ui/icons/AddBox'
 import {FormattedMessage} from 'react-intl'
 import AddFrame from '../../../icons/AddFrame'
@@ -49,6 +50,7 @@ const INTERNAL_MODES = {
   ADD_TEXT: 3,
   ADD_FILE: 4,
   ADD_TEMPLATE: 5,
+  ADD_TABLE: 6,
 }
 
 const toEngineMode = internMode => {
@@ -134,6 +136,34 @@ const MapToolbar = () => {
     setInternMode(createHandleAddModeChange(INTERNAL_MODES.ADD_FRAME))
     writeAddInfo('onAddFrame')
     const {style, permanent} = CONFIG.nodes.addFrameSettings
+    eventManager.setNodeProperties(addNode.current, style, permanent)
+  }
+
+  const onAddTable = () => {
+    const gridOptions = {
+      rowData: [
+        {
+          name: 'Username',
+          type: 'Scripted',
+          language: 'English',
+          genres: 'Nature',
+          runtime: '30',
+        },
+        {
+          name: 'Username',
+          type: 'Scripted',
+          language: 'English',
+          genres: 'Nature',
+          runtime: '30',
+        },
+      ],
+      columnDefs: [{field: 'name'}, {field: 'type'}, {field: 'language'}, {field: 'genres'}, {field: 'runtime'}],
+    }
+
+    setInternMode(createHandleAddModeChange(INTERNAL_MODES.ADD_TABLE))
+    writeAddInfo('onAddTable')
+    const {style, permanent} = CONFIG.nodes.addTableSettings
+    style.gridOptions = gridOptions
     eventManager.setNodeProperties(addNode.current, style, permanent)
   }
 
@@ -241,6 +271,11 @@ const MapToolbar = () => {
         icon={<AddFrame color={getIconColor(INTERNAL_MODES.ADD_FRAME)} />}
         titleId="toolbarTooltipCreateFrame"
         onClick={onAddFrame}
+      />
+      <TooltipButton
+        icon={<TableChartOutlined color={getIconColor(INTERNAL_MODES.ADD_TABLE)} />}
+        titleId="toolbarTooltipCreateTable"
+        onClick={onAddTable}
       />
       <TooltipButton
         icon={<TextIncrease color={getIconColor(INTERNAL_MODES.ADD_TEXT)} />}
