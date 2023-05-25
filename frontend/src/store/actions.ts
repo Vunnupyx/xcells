@@ -114,6 +114,7 @@ export const add = (node: NodeContent): MapStoreAction => ({
       height = create.height,
       scale = create.scale,
       title,
+      gridOptions,
       color,
       borderColor,
     } = node
@@ -143,6 +144,7 @@ export const add = (node: NodeContent): MapStoreAction => ({
     }
 
     if (height) doc.nodes[id].height = height
+    if (gridOptions) doc.nodes[id].gridOptions = gridOptions
 
     if (parent) {
       if (parent === id) {
@@ -174,6 +176,19 @@ export const rescale = (node: NodeData): MapStoreAction => ({
     if (scale !== undefined) {
       if (scale <= 0) throw new Error('scale cannot be zero or less')
       if (doc.nodes[id].scale !== scale) doc.nodes[id].scale = scale
+    }
+  },
+})
+
+export const editTable = (node: NodeData): MapStoreAction => ({
+  node,
+  name: 'nodeEditTable',
+  reducer: doc => {
+    const {id, gridOptions} = node
+    if (gridOptions && doc.nodes[id].gridOptions !== gridOptions) {
+      doc.nodes[id].gridOptions = gridOptions
+    } else if (!gridOptions && doc.nodes[id].gridOptions) {
+      delete doc.nodes[id].gridOptions
     }
   },
 })

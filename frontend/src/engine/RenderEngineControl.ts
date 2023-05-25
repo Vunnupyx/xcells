@@ -17,11 +17,21 @@ import {
   setFile,
   setImage,
   setImagePosition,
+  editTable,
 } from '../store/actions'
 import rectInsideRect from './utils/intersect/rectInsideRect'
 
 import {duplicateNode} from '../store/utils'
-import {ImagePositions, MapContentData, MapStoreAction, MapStoreActions, NodeTagId, NODE_VISIBLE, NodeId} from './types'
+import {
+  ImagePositions,
+  MapContentData,
+  MapStoreAction,
+  MapStoreActions,
+  NodeTagId,
+  NODE_VISIBLE,
+  NodeId,
+  GridOptions,
+} from './types'
 import CONFIG from './CONFIG'
 
 import type PixiRenderEngine from './PixiRenderEngine'
@@ -356,6 +366,18 @@ class RenderEngineControl {
       [...selectedNodes].map(node => {
         node.file = undefined
         return setFile(node)
+      }),
+    )
+  }
+
+  editTable = (gridOptions: GridOptions): void => {
+    const {dispatch} = this.engine.store
+    const {selectedNodes} = this.engine.eventManager
+    dispatch(
+      [...selectedNodes].map(node => {
+        node.dirty = false
+        node.gridOptions = gridOptions
+        return editTable(node)
       }),
     )
   }
