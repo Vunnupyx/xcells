@@ -236,6 +236,56 @@ describe('MapStore actions', () => {
       })
     })
 
+    it('should set an gridOptions to node and delete it again', () => {
+      const gridOptions = {
+        rowData: [{name: 'Username', type: 'Type'}],
+        columnDefs: [{field: 'name'}, {field: 'type'}],
+        filterModel: {},
+        columnState: [
+          {
+            aggFunc: null,
+            colId: 'name',
+            flex: null,
+            hide: false,
+            pinned: null,
+            pivot: false,
+            pivotIndex: null,
+            rowGroup: false,
+            rowGroupIndex: null,
+            sort: null,
+            sortIndex: null,
+            width: 215,
+          },
+          {
+            aggFunc: null,
+            colId: 'type',
+            flex: null,
+            hide: false,
+            pinned: null,
+            pivot: false,
+            pivotIndex: null,
+            rowGroup: false,
+            rowGroupIndex: null,
+            sort: null,
+            sortIndex: null,
+            width: 215,
+          },
+        ],
+      }
+
+      const tableNode = {id: 'childId', gridOptions} as NodeData
+
+      map = Automerge.change(map, actions.editTable(tableNode).reducer)
+
+      expect(map.nodes.childId.gridOptions).toStrictEqual(gridOptions)
+
+      tableNode.gridOptions = undefined
+
+      map = Automerge.change(map, actions.editTable(tableNode).reducer)
+
+      expect(map.nodes.childId.gridOptions).toBe(undefined)
+    })
+
     it('should set an Image to node and delete it again', () => {
       const image = 'image-id'
 
