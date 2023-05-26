@@ -1,7 +1,7 @@
 import React from 'react'
 import makeStyles from '@material-ui/styles/makeStyles'
 import MuiLink from '@material-ui/core/Link'
-import infinity from '../../../assets/210218_infinitymaps-logo_final-charcoal.png'
+import logo from '../../../assets/xcells_logo.png'
 
 const useStyles = makeStyles(() => ({
   logoInfinity: {
@@ -15,7 +15,7 @@ const Logo = () => {
 
   return (
     <MuiLink href="https://infinitymaps.io" target="_top">
-      <img alt="Infinity Logo" className={classes.logoInfinity} src={infinity} />
+      <img alt="xCELLS Logo" className={classes.logoInfinity} src={logo} />
     </MuiLink>
   )
 }
