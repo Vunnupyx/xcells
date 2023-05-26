@@ -151,12 +151,6 @@ export default {
       title: 'Add Tag To Card',
       create: 'Create and add a new tag ...',
     },
-    editTable: {
-      title: 'Edit Table',
-      add: 'Add',
-      delete: 'Delete',
-      applyChanges: 'Apply Changes',
-    },
   },
 
   button: {
@@ -300,7 +294,6 @@ export default {
   toolbarTooltipNavigationMode: 'Navigation Mode: Navigate through your map (Default).',
   toolbarTooltipCreateNodeMode: 'Add Card (Ctrl/Cmd+Shift+Click or Drag)',
   toolbarTooltipCreateFrame: 'Add Frame (transparent background)',
-  toolbarTooltipCreateTable: 'Add Table',
   toolbarTooltipCreateText: 'Add Text (transparent background and border)',
   toolbarTooltipCreateFile: 'Add File or Image',
   toolbarTooltipInsertTemplate: 'Insert Template',
@@ -391,7 +384,6 @@ export default {
   toolbarMenuReorgInfinity: 'Infinity',
 
   toolbarMenu: {
-    editTable: 'Edit Table',
     checkBox: {
       add: 'Add Checkbox',
       remove: 'Remove Checkbox',

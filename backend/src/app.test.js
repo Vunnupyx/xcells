@@ -558,7 +558,6 @@ describe('user life-cycle', () => {
   const name = subscriber.name
   const password = subscriber.password
   const mail = subscriber.mail
-  const confirmed = subscriber.confirmed
   let token
 
   beforeAll(async () => {
@@ -570,7 +569,7 @@ describe('user life-cycle', () => {
   })
 
   it('should create a new user', async () => {
-    const newUser = new User({id, name, password, mail, confirmed})
+    const newUser = new User({id, name, password, mail})
     await newUser.save()
   })
 

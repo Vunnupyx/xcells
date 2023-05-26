@@ -2,17 +2,19 @@ import React, {useEffect, useMemo, useState} from 'react'
 import {useSessionStorage} from 'react-use'
 
 import makeStyles from '@material-ui/styles/makeStyles'
-import Button from '@material-ui/core/Button'
-import Table from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
-import TableCell from '@material-ui/core/TableCell'
-import TableContainer from '@material-ui/core/TableContainer'
-import TableHead from '@material-ui/core/TableHead'
-import TablePagination from '@material-ui/core/TablePagination'
-import TableSortLabel from '@material-ui/core/TableSortLabel'
-import TableRow from '@material-ui/core/TableRow'
-import TextField from '@material-ui/core/TextField'
-import Grid from '@material-ui/core/Grid'
+import {
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableSortLabel,
+  TableRow,
+  TextField,
+  Grid,
+} from '@material-ui/core'
 import {FormattedMessage} from 'react-intl'
 import useSnackbar from '../../../hooks/useSnackbar'
 import useApi from '../../../hooks/useApi'

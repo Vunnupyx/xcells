@@ -14,13 +14,6 @@ services:
       MONGO_DATABASE: "infinity"
       JWT_TTL: "999999999"
       JWT_SECRET: "SAFW%&BTRDYV6f8^B&$DY%DJKJOL(UIUHJD%RR%^#46%yrdt%68edH"
-      MAIL_HOST: "smtps.udag.de"
-      MAIL_PORT: "587"
-      MAIL_USER: "hello@xcells.io"
-      MAIL_PASSWORD: "1fQNJu0&fyCVET3Hn9YPsZ?!?!?"
-      MAIL_FROM: "hello@xcells.io"
-      MAIL_SUBJECT: "Welcome"
-
 
   frontend:
     # build: "./frontend/"

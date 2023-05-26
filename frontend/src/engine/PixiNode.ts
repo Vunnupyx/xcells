@@ -14,7 +14,7 @@ import NodeTextField from './elements/node/NodeTextField'
 import isUrl from '../utils/isUrl'
 import isEmail from '../utils/isEmail'
 import parseColor from './utils/parseColor'
-import {Dimensions, GridOptions, ImagePositions, NODE_VISIBLE, NodeData, RectangleData} from './types'
+import {Dimensions, ImagePositions, NODE_VISIBLE, NodeData, RectangleData} from './types'
 import {getAllAttachedY} from './utils/nodesAttached'
 import {length, ZERO_AREA} from '../utils/points'
 import range from '../shared/utils/range'
@@ -67,15 +67,11 @@ class PixiNode extends AbstractPixiNode implements NodeData {
 
   _title: string | null = null
 
-  _gridOptions: GridOptions | null | undefined = null
-
   _depth: number | null = null
 
   _tags: string[] | null = null
 
   _checked?: boolean
-
-  _dirty?: boolean
 
   state: State = {
     isHighlighted: false,
@@ -478,7 +474,6 @@ class PixiNode extends AbstractPixiNode implements NodeData {
     if (this.getBackgroundColor().alpha() > 0 || (this.color && this.color !== '@transparent')) return true
     if (this.image) return true
     if (this.title) return true
-    if (this.gridOptions) return true
     if (!this.childNodes || this.childNodes.size <= 0) return false
     return [...this.childNodes].some(node => node.isVisible())
   }
@@ -661,14 +656,6 @@ class PixiNode extends AbstractPixiNode implements NodeData {
     this.childrenRedrawEdges()
   }
 
-  get gridOptions(): GridOptions | undefined {
-    return this._gridOptions !== null ? this._gridOptions : this.storeNode.gridOptions
-  }
-
-  set gridOptions(gridOptions: GridOptions | undefined) {
-    this._gridOptions = gridOptions
-  }
-
   get imagePosition(): ImagePositions | undefined {
     return this._imagePosition !== null ? this._imagePosition : this.storeNode.imagePosition
   }
@@ -821,7 +808,6 @@ class PixiNode extends AbstractPixiNode implements NodeData {
       (this._scale !== null && this._scale !== storeNode.scale) ||
       (this._image !== null && this._image !== storeNode.image) ||
       (!(this._title === '' || !this._title) && this._title !== storeNode.title) ||
-      (this._gridOptions !== null && this._gridOptions !== storeNode.gridOptions) ||
       (this._file !== null && this._file !== storeNode.file) ||
       (this._height !== null && this._height !== storeNode.height) ||
       (this._width !== null && this._width !== storeNode.width) ||
@@ -842,7 +828,6 @@ class PixiNode extends AbstractPixiNode implements NodeData {
     if (this.storeNode.title === this._title) this._title = null
     this._scale = null
     this._image = null
-    this._gridOptions = null
     this._file = null
     this._height = null
     this._width = null
@@ -983,14 +968,6 @@ class PixiNode extends AbstractPixiNode implements NodeData {
 
   set checked(value: boolean | undefined) {
     this._checked = value
-  }
-
-  get dirty(): boolean | undefined {
-    return typeof this._dirty === 'boolean' ? this._dirty : this.storeNode.dirty
-  }
-
-  set dirty(value: boolean | undefined) {
-    this._dirty = value
   }
 
   hasCheckBox() {

@@ -8,8 +8,6 @@
     "@material-ui/icons": "^4.11.3",
     "@material-ui/lab": "^4.0.0-alpha.61",
     "@material-ui/styles": "^4.11.5",
-    "ag-grid-community": "^29.3.4",
-    "ag-grid-react": "^29.3.4",
     "automerge": "^0.14.2",
     "clsx": "^1.1.1",
     "color": "^3.2.1",

@@ -720,7 +720,6 @@ class EventManager extends Publisher {
 
   setNodeProperties = (node: PixiNode, style: Partial<NodeData> = {}, makePermanent = false): void => {
     node.title = style.title || ''
-    node.gridOptions = style.gridOptions || undefined
     node.color = style.color || undefined
     node.borderColor = style.borderColor || undefined
     node.image = style.image || undefined
@@ -806,7 +805,6 @@ class EventManager extends Publisher {
       scale: addNode.scale,
       image: addNode.image,
       title: addNode.title,
-      gridOptions: addNode.gridOptions,
       file: addNode.file,
       height: addNode.height,
       width: addNode.width,

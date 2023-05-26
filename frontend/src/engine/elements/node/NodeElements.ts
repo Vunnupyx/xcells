@@ -22,7 +22,6 @@ import NODE_DETAIL_LEVELS from './NODE_DETAIL_LEVELS'
 import NODE_DETAILS, {NodeDetail} from './NODE_DETAILS'
 import logDuration from '../../utils/logDuration'
 import {isMobile, isTablet} from '../../../utils/browserDetection'
-import NodeHtml from './NodeHtml'
 
 const log = debug('app:RenderEngine:Node:Elements')
 const logPerformance = log.extend('PERFORMANCE', '::')
@@ -31,7 +30,6 @@ type ElementMapping = {
   graphics: NodeGraphics
   background: NodeBackground
   text?: NodeText
-  table?: NodeHtml
   ghostContainer?: NodeGhostContainer
   children?: NodeChildren
   mask?: NodeMask
@@ -133,7 +131,6 @@ class NodeElements extends Elements {
     this.redrawDownloadHandle()
     this.redrawHeaderHandle()
     this.redrawResizeHandle()
-    this.redrawTable()
 
     this.attachMasks()
 
@@ -194,20 +191,6 @@ class NodeElements extends Elements {
     } else if (elements.text) {
       this.removeChild(elements.text)
       delete elements.text
-    }
-  }
-
-  redrawTable(): void {
-    const {node, elements} = this
-    if (NodeHtml.isShown(node)) {
-      if (!elements.table) {
-        elements.table = new NodeHtml(node)
-        this.addChild(elements.table)
-      }
-      elements.table.redraw(this.getDetailInfo())
-    } else if (elements.table) {
-      this.removeChild(elements.table)
-      delete elements.table
     }
   }
 
