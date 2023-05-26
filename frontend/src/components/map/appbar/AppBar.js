@@ -24,8 +24,8 @@ import SearchArea from './search/SearchArea'
 import MapStorePulse from './MapStorePulse'
 import Toolbar from './Toolbar'
 
-import infinity from '../../../assets/210218_infinitymaps-logo_final-charcoal.png'
-import infinity_notext from '../../../assets/210218_infinitymaps-logo_final-charcoal_no-text.png'
+import logo from '../../../assets/xcells_logo.png'
+import logo_notext from '../../../assets/xcells_logo_no-text.png'
 import config from '../../../styles/config'
 import MapMenu from './MapMenu'
 import HelpMenu from './HelpMenu'
@@ -159,7 +159,7 @@ const AppBar = ({presentMode, setPresentMode, pathMode, setPathMode, focusMode, 
         <Grid item className={classes.onTop}>
           <Toolbar>
             <RouterLink to="/maps" className={classes.marginLeftRight}>
-              <img alt="Infinity Logo" className={classes.logo} src={infinity_notext} />
+              <img alt="xCELLS Logo" className={classes.logo} src={logo_notext} />
             </RouterLink>
           </Toolbar>
         </Grid>
@@ -173,7 +173,7 @@ const AppBar = ({presentMode, setPresentMode, pathMode, setPathMode, focusMode, 
             <Toolbar>
               <TooltipWrapper translationId="toolbarTooltipInfinityMapLogo">
                 <RouterLink to="/maps" className={classes.marginLeftRight}>
-                  <img alt="Infinity Logo" className={classes.logo} src={infinity} />
+                  <img alt="xCELLS Logo" className={classes.logo} src={logo} />
                 </RouterLink>
               </TooltipWrapper>
               <TooltipWrapper translationId="toolbarTooltipMapName">
