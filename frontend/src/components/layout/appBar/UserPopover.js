@@ -6,12 +6,10 @@ import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
-import Divider from '@material-ui/core/Divider'
 import {FormattedMessage} from 'react-intl'
 import IconButton from '@material-ui/core/IconButton'
-import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward'
-import InfoIcon from '@material-ui/icons/Info'
-import FeedbackIcon from '@material-ui/icons/Feedback'
+import SettingsIcon from '@material-ui/icons/Settings'
+import AppsIcon from '@material-ui/icons/Apps'
 import Logout from '@material-ui/icons/MeetingRoom'
 import makeStyles from '@material-ui/styles/makeStyles'
 import UserAvatar from '../../UserAvatar'
@@ -26,7 +24,7 @@ const useStyles = makeStyles(() => ({
 
 const UserPopover = () => {
   const classes = useStyles()
-  const {userId, name, logout} = useAuth()
+  const {userId, logout} = useAuth()
 
   return (
     <div>
@@ -49,41 +47,24 @@ const UserPopover = () => {
               }}
             >
               <Box className={classes.box}>
-                <ListItem component="a" button href="https://infinitymaps.io/my-account/">
-                  <ListItemIcon>
-                    <UserAvatar userId={userId} />
-                  </ListItemIcon>
-                  <ListItemText secondary={<FormattedMessage id="userPopoverManageAccount" />} primary={name} />
-                </ListItem>
-                <Divider />
                 <List component="nav" aria-label="user popover list">
-                  <div />
-
-                  <ListItem component="a" button href="https://infinitymaps.io/shop/">
+                  <ListItem component={Link} to="/settings" button>
                     <ListItemIcon>
-                      <ArrowUpwardIcon />
+                      <SettingsIcon />
                     </ListItemIcon>
-                    <ListItemText primary={<FormattedMessage id="userPopoverUpgradeAccount" />} />
+                    <ListItemText primary={<FormattedMessage id="userPopoverSettings" />} />
+                  </ListItem>
+                  <ListItem component={Link} to="/settings/apps" button>
+                    <ListItemIcon>
+                      <AppsIcon />
+                    </ListItemIcon>
+                    <ListItemText primary={<FormattedMessage id="userPopoverAppsIntegrations" />} />
                   </ListItem>
                   <ListItem onClick={logout} button>
                     <ListItemIcon>
                       <Logout />
                     </ListItemIcon>
                     <ListItemText primary={<FormattedMessage id="userPopoverLogOut" />} />
-                  </ListItem>
-
-                  <Divider />
-                  <ListItem button component={Link} to="/maps/feedback">
-                    <ListItemIcon>
-                      <FeedbackIcon />
-                    </ListItemIcon>
-                    <ListItemText primary={<FormattedMessage id="menuFeedback" />} />
-                  </ListItem>
-                  <ListItem button component="a" href="https://infinitymaps.io/en/site-notice/">
-                    <ListItemIcon>
-                      <InfoIcon />
-                    </ListItemIcon>
-                    <ListItemText primary={<FormattedMessage id="menuLegalNotice" />} />
                   </ListItem>
                 </List>
               </Box>
