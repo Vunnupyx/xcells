@@ -9,6 +9,7 @@ export const subscriber = {
   roles: [ROLES.subscriber],
   limitMaps: 10,
   limitNodes: 300,
+  confirmed: true,
 }
 
 export const org_subscriber = {
