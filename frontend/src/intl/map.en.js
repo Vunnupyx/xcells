@@ -54,6 +54,8 @@ export default {
   searchForMap: 'Search for Map Title',
 
   userPopoverUpgradeAccount: 'Upgrade Your Account',
+  userPopoverSettings: 'Settings',
+  userPopoverAppsIntegrations: 'Apps & Integrations',
   userPopoverManageAccount: 'Manage Your Account',
   userPopoverLogOut: 'Log Out',
   userPopoverDeleteMap: 'Delete this Map',
@@ -636,6 +638,7 @@ export default {
     mapsAdminCRM: 'User Stats',
     mapsAdminWaitlist: 'Waitlist',
     login: 'Login',
+    settings: 'Settings',
   },
 
   warningMobile:
@@ -702,5 +705,22 @@ export default {
         ActivateAccountError: 'Failed to activate',
       },
     },
+  },
+  settingsLayout: {
+    profileSettings: 'Profile settings',
+    appsIntegrations: 'Apps & Integrations',
+  },
+  profileSettings: {
+    applyChanges: 'Apply Changes',
+    emailAddress: 'Email Address',
+    editProfile: 'Edit Profile',
+    appsIntegrations: 'Apps & Integrations',
+    username: 'Username',
+    success: 'Success',
+    unknown: 'Unknown',
+  },
+  appsSettings: {
+    appsIntegrations: 'Apps & Integrations',
+    addApps: 'Add apps',
   },
 }
