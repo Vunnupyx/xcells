@@ -9,9 +9,9 @@ import Button from '@material-ui/core/Button'
 import {TextField} from 'mui-rff'
 import {Form} from 'react-final-form'
 import makeStyles from '@material-ui/styles/makeStyles'
-import useSnackbar from '../../hooks/useSnackbar'
-import useApiMutation from '../../hooks/useApiMutation'
-import useAuth from '../../hooks/useAuth'
+import useSnackbar from '../../../../hooks/useSnackbar'
+import useApiMutation from '../../../../hooks/useApiMutation'
+import useAuth from '../../../../hooks/useAuth'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -23,7 +23,7 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const ProfileSettings = () => {
+const ProfilePage = () => {
   const {userId} = useAuth()
   const classes = useStyles()
   const {success, error} = useSnackbar()
@@ -89,4 +89,4 @@ const ProfileSettings = () => {
   )
 }
 
-export default ProfileSettings
+export default ProfilePage

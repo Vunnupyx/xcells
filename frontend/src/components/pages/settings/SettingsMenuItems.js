@@ -10,8 +10,8 @@ import AppsIcon from '@material-ui/icons/Apps'
 
 import Box from '@material-ui/core/Box'
 import {makeStyles} from '@material-ui/core/styles'
-import ListItemLink from '../wrapped/ListItemLink'
-import Link from '../wrapped/Link'
+import ListItemLink from '../../wrapped/ListItemLink'
+import Link from '../../wrapped/Link'
 
 const useStyles = makeStyles(theme => ({
   root: {
