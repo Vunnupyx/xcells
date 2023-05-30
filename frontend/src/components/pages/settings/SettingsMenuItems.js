@@ -18,6 +18,9 @@ const useStyles = makeStyles(theme => ({
     backgroundColor: '#fff',
     borderRadius: theme.shape.borderRadius,
   },
+  link: {
+    borderRadius: theme.shape.borderRadius,
+  },
 }))
 
 const elementsTop = [
@@ -48,7 +51,7 @@ const SettingsMenuItems = () => {
     <Box py={2} px={2} className={classes.root}>
       <List>
         {elementsTop.map(({to, Icon, text}) => (
-          <NavListItemLink component={Link} key={to} to={to}>
+          <NavListItemLink className={classes.link} component={Link} key={to} to={to}>
             <ListItemIcon>
               <Icon />
             </ListItemIcon>

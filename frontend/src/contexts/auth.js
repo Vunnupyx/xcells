@@ -51,6 +51,7 @@ export const AuthProvider = ({children}) => {
 
   const {expiresAt} = auth
   const userId = auth?.wp_user?.ID
+  const userEmail = auth?.wp_user?.data?.user_email
 
   useApiQueryStatic({
     url: '/current-user-statistics',
@@ -178,8 +179,8 @@ export const AuthProvider = ({children}) => {
   )
 
   const value = useMemo(
-    () => ({auth, userId, logout, login, signup, LoginLink, SignupLink, refresh, isLoggedIn, isRefreshed}),
-    [auth, userId, logout, login, signup, LoginLink, SignupLink, refresh, isLoggedIn, isRefreshed],
+    () => ({auth, userId, userEmail, logout, login, signup, LoginLink, SignupLink, refresh, isLoggedIn, isRefreshed}),
+    [auth, userId, userEmail, logout, login, signup, LoginLink, SignupLink, refresh, isLoggedIn, isRefreshed],
   )
 
   if (!isRefreshed) return null
