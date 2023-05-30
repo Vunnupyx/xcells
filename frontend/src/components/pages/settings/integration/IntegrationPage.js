@@ -5,6 +5,9 @@ import Box from '@material-ui/core/Box'
 import Typography from '@material-ui/core/Typography'
 import makeStyles from '@material-ui/styles/makeStyles'
 import Link from '@material-ui/core/Link'
+import useDialog from '../../../../hooks/useDialog'
+import IntegrationDialog from '../../../dialogs/IntegrationDialog'
+import IntegrationCategory from './IntegrationCategory'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -17,18 +20,23 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const AppsSettings = () => {
+const IntegrationPage = () => {
   const classes = useStyles()
+  const openDialog = useDialog()
 
   return (
     <Box py={4} px={4} className={classes.root}>
       <Typography variant="h5" component="h2">
-        <FormattedMessage id="appsSettings.appsIntegrations" />
+        <FormattedMessage id="integrationSettings.appsIntegrations" />
       </Typography>
       <Box mt={3}>
         <Typography variant="body1">
-          <Link color="inherit" className={classes.link}>
-            <FormattedMessage id="appsSettings.addApps" />
+          <Link
+            color="inherit"
+            className={classes.link}
+            onClick={() => openDialog(IntegrationDialog, {children: <IntegrationCategory openDialog={openDialog} />})}
+          >
+            <FormattedMessage id="integrationSettings.addApps" />
           </Link>
         </Typography>
       </Box>
@@ -36,4 +44,4 @@ const AppsSettings = () => {
   )
 }
 
-export default AppsSettings
+export default IntegrationPage

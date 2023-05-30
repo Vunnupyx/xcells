@@ -159,6 +159,9 @@ export default {
       delete: 'Delete',
       applyChanges: 'Apply Changes',
     },
+    integration: {
+      title: 'xCells Marketplace',
+    },
   },
 
   button: {
@@ -218,6 +221,7 @@ export default {
   username: 'Username',
   email: 'Email',
   password: 'Password',
+  version: 'Version',
   signupTitle: 'Sign Up',
   usernameRequired: 'Username is required',
   emailRequired: 'Email is required',
@@ -719,8 +723,13 @@ export default {
     success: 'Success',
     unknown: 'Unknown',
   },
-  appsSettings: {
+  integrationSettings: {
     appsIntegrations: 'Apps & Integrations',
     addApps: 'Add apps',
+  },
+  integration: {
+    openai: {
+      title: 'OpenAI ChatGPT',
+    },
   },
 }

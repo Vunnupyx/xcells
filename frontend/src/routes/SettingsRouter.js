@@ -2,9 +2,9 @@ import React from 'react'
 import {Redirect, Route, Switch, useRouteMatch} from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 import HelmetTitle from '../components/wrapped/HelmetTitle'
-import SettingsLayout from '../components/layout/SettingsLayout'
-import ProfileSettings from '../components/pages/ProfileSettings'
-import AppsSettings from '../components/pages/AppsSettings'
+import SettingsLayout from '../components/pages/settings/SettingsLayout'
+import ProfilePage from '../components/pages/settings/user/ProfilePage'
+import IntegrationPage from '../components/pages/settings/integration/IntegrationPage'
 
 const MapsRouter = () => {
   const {path} = useRouteMatch()
@@ -16,13 +16,13 @@ const MapsRouter = () => {
       <Route path={path} exact>
         <SettingsLayout>
           <HelmetTitle titleId="pageTitle.settings" />
-          <ProfileSettings />
+          <ProfilePage />
         </SettingsLayout>
       </Route>
       <Route path={`${path}/apps`} exact>
         <SettingsLayout>
           <HelmetTitle titleId="pageTitle.settings" />
-          <AppsSettings />
+          <IntegrationPage />
         </SettingsLayout>
       </Route>
     </Switch>
