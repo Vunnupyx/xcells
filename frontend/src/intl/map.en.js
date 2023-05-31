@@ -161,6 +161,16 @@ export default {
     },
     integration: {
       title: 'xCells Marketplace',
+      apiKey: 'API key',
+      model: 'Model',
+      otherSettings: 'Other chat GPT settings that might be relevant',
+      user: 'User',
+      temperature: 'Temperature',
+      suffix: 'Suffix',
+      saveSuccess: 'Changes have been applied successfully!',
+      authenticationError: 'Please double-check your API key',
+      rateLimitExceeded: 'You exceeded your current quota, please check your plan and billing details',
+      wrongRequest: 'Something went wrong with the request, please check the Network log',
     },
   },
 
@@ -730,6 +740,7 @@ export default {
   integration: {
     openai: {
       title: 'OpenAI ChatGPT',
+      installed: 'Installed',
     },
   },
 }

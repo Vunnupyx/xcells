@@ -2,96 +2,38 @@ import React from 'react'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
-import Divider from '@material-ui/core/Divider'
 import {FormattedMessage} from 'react-intl'
-import ContactMailIcon from '@material-ui/icons/ContactMail'
-import HomeIcon from '@material-ui/icons/Home'
-import InfoIcon from '@material-ui/icons/Info'
-import FeedbackIcon from '@material-ui/icons/Feedback'
 import Logout from '@material-ui/icons/MeetingRoom'
-import PublicIcon from '@material-ui/icons/Public'
-import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward'
-import AccountBoxIcon from '@material-ui/icons/AccountBox'
 import Menu from '@material-ui/core/Menu'
 
+import SettingsIcon from '@material-ui/icons/Settings'
+import AppsIcon from '@material-ui/icons/Apps'
 import useAuth from '../../../hooks/useAuth'
-import UserAvatar from '../../UserAvatar'
-import HiddenForGuest from '../../hide/HiddenForGuest'
-import HiddenForUser from '../../hide/HiddenForUser'
-import ListItemLink from '../../wrapped/ListItemLink'
 import Link from '../../wrapped/Link'
 
 const ProfileMenu = props => {
-  const {auth, logout, login, signup} = useAuth()
-  const username = auth?.wp_user?.data?.user_login || auth?.userId
+  const {logout} = useAuth()
 
   return (
     <Menu {...props}>
-      <ListItem component="a" button href="https://infinitymaps.io/my-account/">
+      <ListItem component={Link} to="/settings" button>
         <ListItemIcon>
-          <UserAvatar userId={auth.userId} />
+          <SettingsIcon />
         </ListItemIcon>
-        <ListItemText secondary={<FormattedMessage id="userPopoverManageAccount" />} primary={username} />
+        <ListItemText primary={<FormattedMessage id="userPopoverSettings" />} />
       </ListItem>
-      <Divider />
-      <HiddenForGuest>
-        <ListItemLink to="/maps">
-          <ListItemIcon>
-            <HomeIcon />
-          </ListItemIcon>
-          <ListItemText primary={<FormattedMessage id="mapListHome" />} />
-        </ListItemLink>
-        <Divider />
-
-        <ListItem component="a" button href="https://infinitymaps.io/shop/">
-          <ListItemIcon>
-            <ArrowUpwardIcon />
-          </ListItemIcon>
-          <ListItemText primary={<FormattedMessage id="userPopoverUpgradeAccount" />} />
-        </ListItem>
-      </HiddenForGuest>
-      <HiddenForUser>
-        <ListItemLink to="/maps/public">
-          <ListItemIcon>
-            <PublicIcon />
-          </ListItemIcon>
-          <ListItemText primary={<FormattedMessage id="userPopoverAppMoreMaps" />} />
-        </ListItemLink>
-
-        <ListItem button onClick={signup}>
-          <ListItemIcon>
-            <ContactMailIcon />
-          </ListItemIcon>
-          <ListItemText primary={<FormattedMessage id="menuSignup" />} />
-        </ListItem>
-        <ListItem button onClick={login}>
-          <ListItemIcon>
-            <AccountBoxIcon />
-          </ListItemIcon>
-          <ListItemText primary={<FormattedMessage id="menuLogin" />} />
-        </ListItem>
-      </HiddenForUser>
-      <ListItem button component={Link} to="/maps/feedback">
+      <ListItem component={Link} to="/settings/apps" button>
         <ListItemIcon>
-          <FeedbackIcon />
+          <AppsIcon />
         </ListItemIcon>
-        <ListItemText primary={<FormattedMessage id="menuFeedback" />} />
+        <ListItemText primary={<FormattedMessage id="userPopoverAppsIntegrations" />} />
       </ListItem>
-      <ListItem button component="a" href="https://infinitymaps.io/en/site-notice/">
+      <ListItem onClick={logout} button>
         <ListItemIcon>
-          <InfoIcon />
+          <Logout />
         </ListItemIcon>
-        <ListItemText primary={<FormattedMessage id="menuLegalNotice" />} />
+        <ListItemText primary={<FormattedMessage id="userPopoverLogOut" />} />
       </ListItem>
-      <HiddenForGuest>
-        <Divider />
-        <ListItem button onClick={logout}>
-          <ListItemIcon>
-            <Logout />
-          </ListItemIcon>
-          <ListItemText primary={<FormattedMessage id="userPopoverLogOut" />} />
-        </ListItem>
-      </HiddenForGuest>
     </Menu>
   )
 }
