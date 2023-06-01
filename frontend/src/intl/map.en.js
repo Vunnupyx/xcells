@@ -54,6 +54,8 @@ export default {
   searchForMap: 'Search for Map Title',
 
   userPopoverUpgradeAccount: 'Upgrade Your Account',
+  userPopoverSettings: 'Settings',
+  userPopoverAppsIntegrations: 'Apps & Integrations',
   userPopoverManageAccount: 'Manage Your Account',
   userPopoverLogOut: 'Log Out',
   userPopoverDeleteMap: 'Delete this Map',
@@ -157,6 +159,16 @@ export default {
       delete: 'Delete',
       applyChanges: 'Apply Changes',
     },
+    integration: {
+      title: 'xCells Marketplace',
+      apiKey: 'API key',
+      model: 'Model',
+      otherSettings: 'Other settings',
+      saveSuccess: 'Changes have been applied successfully!',
+      authenticationError: 'Please double-check your API key',
+      rateLimitExceeded: 'You exceeded your current quota, please check your plan and billing details',
+      wrongRequest: 'Something went wrong with the request, please check the Network log',
+    },
   },
 
   button: {
@@ -216,6 +228,7 @@ export default {
   username: 'Username',
   email: 'Email',
   password: 'Password',
+  version: 'Version',
   signupTitle: 'Sign Up',
   usernameRequired: 'Username is required',
   emailRequired: 'Email is required',
@@ -636,6 +649,7 @@ export default {
     mapsAdminCRM: 'User Stats',
     mapsAdminWaitlist: 'Waitlist',
     login: 'Login',
+    settings: 'Settings',
   },
 
   warningMobile:
@@ -701,6 +715,29 @@ export default {
         ActivateAccountSuccess: 'Account has been activated successfully',
         ActivateAccountError: 'Failed to activate',
       },
+    },
+  },
+  settingsLayout: {
+    profileSettings: 'Profile settings',
+    appsIntegrations: 'Apps & Integrations',
+  },
+  profileSettings: {
+    applyChanges: 'Apply Changes',
+    emailAddress: 'Email Address',
+    editProfile: 'Edit Profile',
+    appsIntegrations: 'Apps & Integrations',
+    username: 'Username',
+    success: 'Success',
+    unknown: 'Unknown',
+  },
+  integrationSettings: {
+    appsIntegrations: 'Apps & Integrations',
+    addApps: 'Add apps',
+  },
+  integration: {
+    openai: {
+      title: 'OpenAI ChatGPT',
+      installed: 'Installed',
     },
   },
 }
