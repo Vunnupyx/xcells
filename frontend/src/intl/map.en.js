@@ -163,7 +163,7 @@ export default {
       title: 'xCells Marketplace',
       apiKey: 'API key',
       model: 'Model',
-      otherSettings: 'Other chat GPT settings that might be relevant',
+      otherSettings: 'Other settings',
       user: 'User',
       temperature: 'Temperature',
       suffix: 'Suffix',
