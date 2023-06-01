@@ -19,7 +19,7 @@ const useStyles = makeStyles(theme => ({
     borderRadius: theme.shape.borderRadius,
   },
   link: {
-    borderRadius: theme.shape.borderRadius,
+    borderRadius: 10,
   },
 }))
 

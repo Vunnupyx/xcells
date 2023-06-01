@@ -29,6 +29,7 @@
     "moment": "^2.29.1",
     "mui-rff": "^3.0.16",
     "notistack": "^1.0.10",
+    "openai": "^3.2.1",
     "pdf-lib": "^1.17.1",
     "pixi-ease": "^3.0.7",
     "pixi-filters": "^4.1.6",

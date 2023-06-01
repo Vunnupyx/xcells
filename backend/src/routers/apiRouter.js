@@ -14,6 +14,7 @@ import authenticationRouter from './authenticationRouter'
 import syncRouter from './syncRouter'
 import statisticsRouter from './statisticsRouter'
 import urlThumbnailRouter from './urlThumbnailRouter'
+import integrationRouter from './integrationRouter'
 
 const apiRouter = new Router({prefix: API_BASE_PATH})
 
@@ -29,5 +30,6 @@ apiRouter
   .use(userRouter.routes(), userRouter.allowedMethods())
   .use(statisticsRouter.routes(), statisticsRouter.allowedMethods())
   .use(urlThumbnailRouter.routes(), urlThumbnailRouter.allowedMethods())
+  .use(integrationRouter.routes(), integrationRouter.allowedMethods())
 
 export default apiRouter
