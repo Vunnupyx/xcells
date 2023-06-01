@@ -8,6 +8,7 @@ import HiddenForUser from '../components/hide/HiddenForUser'
 import HiddenForGuest from '../components/hide/HiddenForGuest'
 import BenchmarkResult from '../components/pages/BenchmarkResult'
 import FirstLoginDialog from '../components/FirstLoginDialog'
+import SettingsRouter from './SettingsRouter'
 
 const Routes = () => (
   <Switch>
@@ -28,6 +29,9 @@ const Routes = () => (
       <HiddenForUser>
         <Redirect to="/maps/public" />
       </HiddenForUser>
+    </Route>
+    <Route path="/settings">
+      <SettingsRouter />
     </Route>
     <Route>
       <HomePageLayout>
