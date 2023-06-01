@@ -14,7 +14,6 @@ import Grid from '@material-ui/core/Grid'
 import {TextField} from 'mui-rff'
 import {Form} from 'react-final-form'
 import {Configuration, OpenAIApi} from 'openai'
-import Typography from '@material-ui/core/Typography'
 import useApiMutation from '../../hooks/useApiMutation'
 import useSnackbar from '../../hooks/useSnackbar'
 
@@ -122,27 +121,12 @@ const OpenaiDialog = ({initialOpenai, open, onClose}) => {
                     id="model"
                     label={<FormattedMessage id="dialog.integration.model" />}
                     name="model"
+                    readonly
                     value={OPENAI_DEFAULT_MODEL}
                   />
-                  <Typography className={classes.subtitle} variant="subtitle1" align="center">
+                  {/* <Typography className={classes.subtitle} variant="subtitle1" align="center">
                     <FormattedMessage id="dialog.integration.otherSettings" />
-                  </Typography>
-                  <TextField
-                    variant="outlined"
-                    margin="normal"
-                    fullWidth
-                    name="user"
-                    label={<FormattedMessage id="dialog.integration.user" />}
-                    id="user"
-                  />
-                  <TextField
-                    variant="outlined"
-                    margin="normal"
-                    fullWidth
-                    name="suffix"
-                    label={<FormattedMessage id="dialog.integration.suffix" />}
-                    id="suffix"
-                  />
+                  </Typography> */}
                 </Grid>
               </Grid>
             </DialogContent>
