@@ -38,6 +38,8 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
+const OPENAI_DEFAULT_MODEL = 'gpt-3.5-turbo'
+
 const OpenaiDialog = ({initialOpenai, open, onClose}) => {
   const classes = useStyles()
   const [isLoading, setIsLoading] = useState(false)
@@ -59,13 +61,14 @@ const OpenaiDialog = ({initialOpenai, open, onClose}) => {
   const onSubmit = useCallback(
     formData => {
       setIsLoading(true)
-      const configuration = new Configuration({
-        apiKey: formData.apiKey,
-      })
-      const openai = new OpenAIApi(configuration)
-      openai
-        .createCompletion({
-          model: formData.model,
+      new OpenAIApi(
+        new Configuration({
+          apiKey: formData.apiKey,
+        }),
+      )
+        .createChatCompletion({
+          model: formData.model || OPENAI_DEFAULT_MODEL,
+          messages: [{role: 'user', content: 'Hello!'}],
           user: formData.user,
           suffix: formData.suffix,
         })
@@ -119,6 +122,7 @@ const OpenaiDialog = ({initialOpenai, open, onClose}) => {
                     id="model"
                     label={<FormattedMessage id="dialog.integration.model" />}
                     name="model"
+                    value={OPENAI_DEFAULT_MODEL}
                   />
                   <Typography className={classes.subtitle} variant="subtitle1" align="center">
                     <FormattedMessage id="dialog.integration.otherSettings" />
