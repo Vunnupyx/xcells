@@ -5,6 +5,7 @@ import Box from '@material-ui/core/Box'
 import Typography from '@material-ui/core/Typography'
 import makeStyles from '@material-ui/styles/makeStyles'
 import Link from '@material-ui/core/Link'
+import useApiQuery from '../../../../hooks/useApiQuery'
 import useDialog from '../../../../hooks/useDialog'
 import IntegrationDialog from '../../../dialogs/IntegrationDialog'
 import IntegrationCategory from './IntegrationCategory'
@@ -24,6 +25,12 @@ const IntegrationPage = () => {
   const classes = useStyles()
   const openDialog = useDialog()
 
+  const {data} = useApiQuery({
+    url: '/integration/openai',
+    cacheTime: 0,
+    staleTime: 0,
+  })
+
   return (
     <Box py={4} px={4} className={classes.root}>
       <Typography variant="h5" component="h2">
@@ -34,12 +41,17 @@ const IntegrationPage = () => {
           <Link
             color="inherit"
             className={classes.link}
-            onClick={() => openDialog(IntegrationDialog, {children: <IntegrationCategory openDialog={openDialog} />})}
+            onClick={() =>
+              openDialog(IntegrationDialog, {
+                children: <IntegrationCategory openDialog={openDialog} />,
+              })
+            }
           >
             <FormattedMessage id="integrationSettings.addApps" />
           </Link>
         </Typography>
       </Box>
+      <Box mt={3}>{data && <IntegrationCategory openDialog={openDialog} />}</Box>
     </Box>
   )
 }
