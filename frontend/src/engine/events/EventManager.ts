@@ -1219,14 +1219,16 @@ class EventManager extends Publisher {
     node.openTextField('', 'end')
   }
 
-  replyChatGPTAnswer = async (node: PixiNode) => {
-    const {addDispatch, nodeGrow, saveNodes, engine} = this
+  replyChatGPTAnswer = async (content: string, node: PixiNode) => {
     const {scale} = CONFIG.nodes.create
+    const {addDispatch, nodeGrow, saveNodes, engine} = this
+    const {settings} = this.store
+
+    if (!settings) return
+
     const {candidate, nodeAbove} = node.getFreeChildPosition({parentNode: node})
-    const completion = await createChatCompletion(
-      [{role: 'user', content: node.title || ''}],
-      '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',
-    )
+    const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
+
     if (node.hasContent() && nodeAbove) {
       nodeAbove.title = completion
       addDispatch(edit(nodeAbove)).then()
