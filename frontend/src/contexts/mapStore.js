@@ -54,7 +54,15 @@ export const MapStoreProvider = ({children}) => {
 
   const [store, setStore] = useState(() => new MapStoreNone())
 
-  const {reconnect, close, subscribe, unsubscribe, setAuth = () => null, error: storeError} = store
+  const {
+    reconnect,
+    close,
+    subscribe,
+    unsubscribe,
+    setAuth = () => null,
+    setSettings = () => null,
+    error: storeError,
+  } = store
   const {error: errorSnackbar} = snackbar
 
   const {data: {writeable} = {}} = useApiQuery({
@@ -95,7 +103,7 @@ export const MapStoreProvider = ({children}) => {
     if (mapId && writeable !== undefined) {
       let newStore
       if (writeable && !checkInIframe()) {
-        newStore = new MapStore(mapId, settings, limitNodes, myUsername, {})
+        newStore = new MapStore(mapId, limitNodes, myUsername, {})
         newStore.setTrackingFunction(track)
       } else {
         newStore = new MapStoreReadOnly(mapId)
@@ -105,7 +113,7 @@ export const MapStoreProvider = ({children}) => {
     } else {
       setStore(s => (s instanceof MapStoreNone ? s : new MapStoreNone()))
     }
-  }, [mapId, writeable, setStore, myUsername, limitNodes, track, settings])
+  }, [mapId, writeable, setStore, myUsername, limitNodes, track])
 
   useEffect(() => {
     if (isRefreshed) {
@@ -126,7 +134,6 @@ export const MapStoreProvider = ({children}) => {
         setTrackingParameter({
           mapId: md5(mapId),
           title,
-          settings: 'holooo',
         })
       }
     },
@@ -135,7 +142,8 @@ export const MapStoreProvider = ({children}) => {
 
   useEffect(() => {
     setAuth(auth)
-  }, [auth, setAuth])
+    setSettings(settings)
+  }, [auth, settings, setAuth, setSettings])
 
   useEffect(() => {
     subscribe(subscription)

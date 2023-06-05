@@ -62,7 +62,7 @@ class MapStoreWrite implements MapStore {
 
   mapId: string
 
-  settings: Settings
+  settings: Settings | undefined
 
   log: Logger
 
@@ -86,7 +86,6 @@ class MapStoreWrite implements MapStore {
 
   constructor(
     mapId: MapId,
-    settings: Settings,
     limitNodes: number | boolean,
     myUsername: string,
     socketOptions: SocketIOClient.ConnectOpts = {},
@@ -110,11 +109,14 @@ class MapStoreWrite implements MapStore {
     this.connection = new AutomergeConnection(this.docSet, this.sendMsg)
 
     this.limitNodes = limitNodes
-    this.settings = settings
   }
 
   setAuth = (auth: {limitNodes?: number}): void => {
     this.auth = auth
+  }
+
+  setSettings = (settings: Settings | undefined): void => {
+    this.settings = settings
   }
 
   setTrackingFunction = (trackingFunction: (param: string) => void): void => {
