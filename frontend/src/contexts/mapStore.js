@@ -48,6 +48,10 @@ export const MapStoreProvider = ({children}) => {
   const shareEnabled = publicPropertiesData?.enabled ? publicPropertiesData.enabled : false
   const shareHidden = publicPropertiesData?.hidden ? publicPropertiesData.enabled : false
 
+  const {data: settings} = useApiQueryStatic({
+    url: '/integration/openai',
+  })
+
   const [store, setStore] = useState(() => new MapStoreNone())
 
   const {reconnect, close, subscribe, unsubscribe, setAuth = () => null, error: storeError} = store
@@ -91,7 +95,7 @@ export const MapStoreProvider = ({children}) => {
     if (mapId && writeable !== undefined) {
       let newStore
       if (writeable && !checkInIframe()) {
-        newStore = new MapStore(mapId, limitNodes, myUsername, {})
+        newStore = new MapStore(mapId, settings, limitNodes, myUsername, {})
         newStore.setTrackingFunction(track)
       } else {
         newStore = new MapStoreReadOnly(mapId)
@@ -101,7 +105,7 @@ export const MapStoreProvider = ({children}) => {
     } else {
       setStore(s => (s instanceof MapStoreNone ? s : new MapStoreNone()))
     }
-  }, [mapId, writeable, setStore, myUsername, limitNodes, track])
+  }, [mapId, writeable, setStore, myUsername, limitNodes, track, settings])
 
   useEffect(() => {
     if (isRefreshed) {
@@ -122,6 +126,7 @@ export const MapStoreProvider = ({children}) => {
         setTrackingParameter({
           mapId: md5(mapId),
           title,
+          settings: 'holooo',
         })
       }
     },

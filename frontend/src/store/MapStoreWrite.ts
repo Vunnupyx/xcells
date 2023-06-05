@@ -24,6 +24,7 @@ import {
   NodeDatas,
   NodeId,
   NodeTagDatas,
+  Settings,
 } from '../engine/types'
 import TranslatableError from '../utils/TranslatableError'
 
@@ -61,6 +62,8 @@ class MapStoreWrite implements MapStore {
 
   mapId: string
 
+  settings: Settings
+
   log: Logger
 
   logError: Logger
@@ -83,6 +86,7 @@ class MapStoreWrite implements MapStore {
 
   constructor(
     mapId: MapId,
+    settings: Settings,
     limitNodes: number | boolean,
     myUsername: string,
     socketOptions: SocketIOClient.ConnectOpts = {},
@@ -106,6 +110,7 @@ class MapStoreWrite implements MapStore {
     this.connection = new AutomergeConnection(this.docSet, this.sendMsg)
 
     this.limitNodes = limitNodes
+    this.settings = settings
   }
 
   setAuth = (auth: {limitNodes?: number}): void => {
