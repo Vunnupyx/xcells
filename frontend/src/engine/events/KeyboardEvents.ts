@@ -292,6 +292,7 @@ class KeyboardEvents {
       lastSelectedNode,
       selectNode,
       createSibling,
+      replyChatGPTAnswer,
       createChildAndSelect,
       scaleUp,
       scaleDown,
@@ -436,14 +437,12 @@ class KeyboardEvents {
         }
       } else if (isFocusedTextField) {
         if (!control && !shiftKey) {
-          if (lastSelectedNode) {
+          if (lastSelectedNode && lastSelectedNode.title?.startsWith('/chatgpt')) {
             if (lastSelectedNode.state.isTemporary) {
               saveTemporaryNode(lastSelectedNode)
             }
-            createSibling(lastSelectedNode, true)
+            replyChatGPTAnswer(lastSelectedNode)
             trackAction({action: 'nodeAdd', key: 'enter', nestingParents: numberOfNestingParents(lastSelectedNode) - 1})
-          } else if (lastSelectEdge) {
-            lastSelectEdge.closeTextField(false)
           }
         } else if (!control && shiftKey) {
           // line break, handled by text area
