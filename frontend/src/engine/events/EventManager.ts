@@ -1219,7 +1219,7 @@ class EventManager extends Publisher {
     node.openTextField('', 'end')
   }
 
-  replyChatGPTAnswer = async (content: string, node: PixiNode) => {
+  replyChatGPTAnswer = async (content: string, node: PixiNode, multiLine: boolean) => {
     const {scale} = CONFIG.nodes.create
     const {addDispatch, nodeGrow, saveNodes, engine} = this
     const {settings} = this.store
@@ -1228,6 +1228,14 @@ class EventManager extends Publisher {
 
     const {candidate, nodeAbove} = node.getFreeChildPosition({parentNode: node})
     const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
+
+    if (!completion) return
+
+    if (multiLine && completion.includes('\n')) {
+      this.importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id).then()
+      addDispatch(edit(node)).then()
+      return
+    }
 
     if (node.hasContent() && nodeAbove) {
       nodeAbove.title = completion
