@@ -18,7 +18,8 @@ const log = debug('app:Event:Keyboard')
 const logError = log.extend('ERROR*', '::')
 
 const MAP_MIME_TYPE = 'application/json'
-const CHATGPT_QUERY = '/chatgpt '
+const CHATGPT_QUERY = '/chatgpt'
+const CHATGPT_MULTI_LINE = '--listify'
 
 type FileTypes = 'image' | 'file'
 
@@ -446,8 +447,8 @@ class KeyboardEvents {
             }
 
             if (typeof title === 'string' && title.startsWith(CHATGPT_QUERY)) {
-              const content = title.substring(CHATGPT_QUERY.length)
-              replyChatGPTAnswer(content, lastSelectedNode)
+              const content = this._serializeChatGPT(title)
+              replyChatGPTAnswer(content, lastSelectedNode, title.endsWith(CHATGPT_MULTI_LINE))
               trackAction({
                 action: 'nodeAdd',
                 key: 'enter',
@@ -575,6 +576,10 @@ class KeyboardEvents {
     }
 
     if (document.activeElement !== document.body && isDownHandled[keyCode]) event.stopPropagation()
+  }
+
+  private _serializeChatGPT = (content: string): string => {
+    return content.replace(new RegExp(`${CHATGPT_QUERY}|${CHATGPT_MULTI_LINE}`, 'g'), '').trim()
   }
 }
 
