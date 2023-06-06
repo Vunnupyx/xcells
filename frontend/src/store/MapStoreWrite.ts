@@ -24,6 +24,7 @@ import {
   NodeDatas,
   NodeId,
   NodeTagDatas,
+  Settings,
 } from '../engine/types'
 import TranslatableError from '../utils/TranslatableError'
 
@@ -60,6 +61,8 @@ class MapStoreWrite implements MapStore {
   error: Error | null = null
 
   mapId: string
+
+  settings: Settings | undefined
 
   log: Logger
 
@@ -110,6 +113,10 @@ class MapStoreWrite implements MapStore {
 
   setAuth = (auth: {limitNodes?: number}): void => {
     this.auth = auth
+  }
+
+  setSettings = (settings: Settings | undefined): void => {
+    this.settings = settings
   }
 
   setTrackingFunction = (trackingFunction: (param: string) => void): void => {

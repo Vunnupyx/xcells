@@ -2,7 +2,16 @@ import debug from 'debug'
 
 import {api} from '../hooks/useApi'
 
-import {EdgeDatas, MapData, MapId, MapStore, MapStoreSubscriber, NodeDatas, NodeTagDatas} from '../engine/types'
+import {
+  EdgeDatas,
+  MapData,
+  MapId,
+  MapStore,
+  MapStoreSubscriber,
+  NodeDatas,
+  NodeTagDatas,
+  Settings,
+} from '../engine/types'
 import TranslatableError from '../utils/TranslatableError'
 
 const log = debug('app:MapStoreReadOnly')
@@ -25,6 +34,8 @@ class MapStoreReadOnly implements MapStore {
   isWithHistory = false
 
   mapId: string
+
+  settings: Settings | undefined
 
   error: Error | null = null
 

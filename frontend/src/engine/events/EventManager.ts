@@ -51,6 +51,7 @@ import onGrid from '../utils/onGrid'
 import ImportHandler from '../import/ImportHandler'
 import BoundedArray from '../../utils/BoundedArray'
 import createMoveSteps from '../utils/createMoveSteps'
+import {createChatCompletion} from '../utils/openAI'
 
 const log = debug('app:Event:EventManager')
 const logError = log.extend('ERROR*', '::')
@@ -1216,6 +1217,35 @@ class EventManager extends Publisher {
 
     this.selectSingleNode(node)
     node.openTextField('', 'end')
+  }
+
+  replyChatGPTAnswer = async (content: string, node: PixiNode) => {
+    const {scale} = CONFIG.nodes.create
+    const {addDispatch, nodeGrow, saveNodes, engine} = this
+    const {settings} = this.store
+
+    if (!settings) return
+
+    const {candidate, nodeAbove} = node.getFreeChildPosition({parentNode: node})
+    const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
+
+    if (node.hasContent() && nodeAbove) {
+      nodeAbove.title = completion
+      addDispatch(edit(nodeAbove)).then()
+    } else {
+      const id = generateNodeId()
+      const nodeData = {
+        ...candidate,
+        title: completion,
+        scale,
+        id,
+      }
+      const newChild = engine.updateNode(nodeData, node, false)
+      nodeGrow(newChild.parentNode)
+
+      addDispatch(add(newChild)).then()
+      saveNodes().then()
+    }
   }
 
   createChild = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: RenderNodeCandidate): PixiNode => {

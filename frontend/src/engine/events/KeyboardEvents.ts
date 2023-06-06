@@ -18,6 +18,7 @@ const log = debug('app:Event:Keyboard')
 const logError = log.extend('ERROR*', '::')
 
 const MAP_MIME_TYPE = 'application/json'
+const CHATGPT_QUERY = '/chatgpt '
 
 type FileTypes = 'image' | 'file'
 
@@ -292,6 +293,7 @@ class KeyboardEvents {
       lastSelectedNode,
       selectNode,
       createSibling,
+      replyChatGPTAnswer,
       createChildAndSelect,
       scaleUp,
       scaleDown,
@@ -437,13 +439,21 @@ class KeyboardEvents {
       } else if (isFocusedTextField) {
         if (!control && !shiftKey) {
           if (lastSelectedNode) {
+            const {title} = lastSelectedNode
+
             if (lastSelectedNode.state.isTemporary) {
               saveTemporaryNode(lastSelectedNode)
             }
-            createSibling(lastSelectedNode, true)
-            trackAction({action: 'nodeAdd', key: 'enter', nestingParents: numberOfNestingParents(lastSelectedNode) - 1})
-          } else if (lastSelectEdge) {
-            lastSelectEdge.closeTextField(false)
+
+            if (typeof title === 'string' && title.startsWith(CHATGPT_QUERY)) {
+              const content = title.substring(CHATGPT_QUERY.length)
+              replyChatGPTAnswer(content, lastSelectedNode)
+              trackAction({
+                action: 'nodeAdd',
+                key: 'enter',
+                nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
+              })
+            }
           }
         } else if (!control && shiftKey) {
           // line break, handled by text area
