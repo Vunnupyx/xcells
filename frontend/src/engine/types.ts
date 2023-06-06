@@ -99,6 +99,17 @@ export type NodeTagData = {
 
 export type NodeTagDatas = NodeTagData[]
 
+interface Openai {
+  apiKey: string
+  model: string
+  user: string
+  suffix: string
+}
+
+export interface Settings {
+  openai: Openai
+}
+
 export type MapContentData = {
   nodes: NodeDatas
   edges?: EdgeDatas
@@ -109,6 +120,7 @@ export type MapContentData = {
 export type MapData = MapContentData & {
   mapId: string
   title?: string
+  settings?: Settings
 }
 
 export type AutomergeList<T> = Array<T> & {

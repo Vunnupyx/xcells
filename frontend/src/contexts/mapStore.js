@@ -48,9 +48,21 @@ export const MapStoreProvider = ({children}) => {
   const shareEnabled = publicPropertiesData?.enabled ? publicPropertiesData.enabled : false
   const shareHidden = publicPropertiesData?.hidden ? publicPropertiesData.enabled : false
 
+  const {data: settings} = useApiQueryStatic({
+    url: '/integration/openai',
+  })
+
   const [store, setStore] = useState(() => new MapStoreNone())
 
-  const {reconnect, close, subscribe, unsubscribe, setAuth = () => null, error: storeError} = store
+  const {
+    reconnect,
+    close,
+    subscribe,
+    unsubscribe,
+    setAuth = () => null,
+    setSettings = () => null,
+    error: storeError,
+  } = store
   const {error: errorSnackbar} = snackbar
 
   const {data: {writeable} = {}} = useApiQuery({
@@ -130,7 +142,8 @@ export const MapStoreProvider = ({children}) => {
 
   useEffect(() => {
     setAuth(auth)
-  }, [auth, setAuth])
+    setSettings(settings)
+  }, [auth, settings, setAuth, setSettings])
 
   useEffect(() => {
     subscribe(subscription)
