@@ -13,6 +13,7 @@ import {
   addEdge,
   move,
   remove,
+  removeChildren,
   rescale,
   resize,
   setFile,
@@ -1232,8 +1233,8 @@ class EventManager extends Publisher {
     if (!completion) return
 
     if (multiLine && completion.includes('\n')) {
+      await addDispatch(removeChildren(node))
       this.importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id).then()
-      addDispatch(edit(node)).then()
       return
     }
 
