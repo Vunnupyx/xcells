@@ -1220,7 +1220,7 @@ class EventManager extends Publisher {
     node.openTextField('', 'end')
   }
 
-  replyChatGPTAnswer = async (content: string, node: PixiNode, multiLine: boolean) => {
+  replyChatGPTOnSingleLine = async (content: string, node: PixiNode) => {
     const {scale} = CONFIG.nodes.create
     const {addDispatch, nodeGrow, saveNodes, engine} = this
     const {settings} = this.store
@@ -1231,12 +1231,6 @@ class EventManager extends Publisher {
     const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
 
     if (!completion) return
-
-    if (multiLine && completion.includes('\n')) {
-      await addDispatch(removeChildren(node))
-      this.importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id).then()
-      return
-    }
 
     if (node.hasContent() && nodeAbove) {
       nodeAbove.title = completion
@@ -1255,6 +1249,20 @@ class EventManager extends Publisher {
       addDispatch(add(newChild)).then()
       saveNodes().then()
     }
+  }
+
+  replyChatGPTOnMultiLine = async (content: string, node: PixiNode) => {
+    const {addDispatch} = this
+    const {settings} = this.store
+
+    if (!settings) return
+
+    const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
+
+    if (!completion) return
+
+    await addDispatch(removeChildren(node))
+    this.importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id).then()
   }
 
   createChild = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: RenderNodeCandidate): PixiNode => {
