@@ -232,9 +232,9 @@ export const setFile = (node: NodeData): MapStoreAction => ({
   },
 })
 
-export const remove = (node: NodeData): MapStoreAction => ({
+export const removeChildren = (node: NodeData): MapStoreAction => ({
   node,
-  name: 'nodeRemove',
+  name: 'nodeRemoveChildren',
   reducer: doc => {
     const {id} = node
     if (id in doc.nodes) {
@@ -242,7 +242,7 @@ export const remove = (node: NodeData): MapStoreAction => ({
       while (children && children.length) {
         const subChildren = [] as unknown as AutomergeList<NodeId>
         children.forEach(childId => {
-          if (doc.nodes[childId].children) subChildren.push(...(doc.nodes[childId].children as Array<NodeId>))
+          if (doc.nodes[childId]?.children) subChildren.push(...(doc.nodes[childId].children as Array<NodeId>))
           const {edges} = doc
           if (edges) {
             Object.entries(edges).forEach(([edgeId, edge]) => {
@@ -261,7 +261,17 @@ export const remove = (node: NodeData): MapStoreAction => ({
         })
         children = subChildren
       }
+    }
+  },
+})
 
+export const remove = (node: NodeData): MapStoreAction => ({
+  node,
+  name: 'nodeRemove',
+  reducer: doc => {
+    const {id} = node
+    if (id in doc.nodes) {
+      removeChildren(node).reducer(doc)
       const parentNodeId = doc.nodes[id].parent
       if (!parentNodeId) throw new Error(`Missing parent in node with id '${id}'`)
 
