@@ -261,6 +261,7 @@ export const removeChildren = (node: NodeData): MapStoreAction => ({
         })
         children = subChildren
       }
+      doc.nodes[id].children = [] as unknown as AutomergeList<NodeId>
     }
   },
 })
