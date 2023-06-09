@@ -24,6 +24,7 @@ import {
   edit,
   setColor,
   setBorderColor,
+  editTable,
 } from '../../store/actions'
 import {generateEdgeId, generateNodeId} from '../../shared/utils/generateId'
 
@@ -56,6 +57,8 @@ import {createChatCompletion} from '../utils/openAI'
 const log = debug('app:Event:EventManager')
 const logError = log.extend('ERROR*', '::')
 const logFlood = log.extend('FLOOD', '::')
+
+const bracketRegexp = /\{(.*)}/gms
 
 type Direction = 'x' | 'y'
 
@@ -1245,6 +1248,43 @@ class EventManager extends Publisher {
 
       addDispatch(add(newChild)).then()
       saveNodes().then()
+    }
+  }
+
+  replyChatGPTOnTable = async (content: string, node: PixiNode) => {
+    const {scale} = CONFIG.nodes.create
+    const {addDispatch, nodeGrow, saveNodes, engine} = this
+    const {settings} = this.store
+
+    if (!settings) return
+
+    const {candidate, nodeAbove} = node.getFreeChildPosition({parentNode: node})
+    const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
+
+    if (!completion) return
+
+    try {
+      const extracted = JSON.parse(completion.match(bracketRegexp)?.[0] || '{}')
+      if (node.hasContent() && nodeAbove) {
+        nodeAbove.dirty = false
+        nodeAbove.gridOptions = extracted
+        await addDispatch(editTable(nodeAbove))
+      } else {
+        const id = generateNodeId()
+        const nodeData = {
+          ...candidate,
+          gridOptions: extracted,
+          scale,
+          id,
+        }
+        const newChild = engine.updateNode(nodeData, node, false)
+        nodeGrow(newChild.parentNode)
+
+        await addDispatch(add(newChild))
+        await saveNodes()
+      }
+    } catch (e) {
+      logError('Internal error: invalid JSON', e)
     }
   }
 
