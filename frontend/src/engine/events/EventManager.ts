@@ -53,12 +53,11 @@ import ImportHandler from '../import/ImportHandler'
 import BoundedArray from '../../utils/BoundedArray'
 import createMoveSteps from '../utils/createMoveSteps'
 import {createChatCompletion} from '../utils/openAI'
+import {BlockLexer} from '../utils/marked/block-lexer'
 
 const log = debug('app:Event:EventManager')
 const logError = log.extend('ERROR*', '::')
 const logFlood = log.extend('FLOOD', '::')
-
-const bracketRegexp = /\{(.*)}/gms
 
 type Direction = 'x' | 'y'
 
@@ -1264,7 +1263,7 @@ class EventManager extends Publisher {
     if (!completion) return
 
     try {
-      const extracted = JSON.parse(completion.match(bracketRegexp)?.[0] || '{}')
+      const extracted = BlockLexer.lex(completion)
       if (node.hasContent() && nodeAbove) {
         nodeAbove.dirty = false
         nodeAbove.gridOptions = extracted
@@ -1284,7 +1283,7 @@ class EventManager extends Publisher {
         await saveNodes()
       }
     } catch (e) {
-      logError('Internal error: invalid JSON', e)
+      logError(e)
     }
   }
 
