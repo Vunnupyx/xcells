@@ -42,12 +42,12 @@ export type RenderNodeCandidate = {
 }
 /* eslint-disable */
 export interface GridOptions {
-  rowData: any[] | null
-  columnDefs: any[] | null
-  filterModel: {
+  rowData?: any[] | null
+  columnDefs?: any[] | null
+  filterModel?: {
     [key: string]: any
   }
-  columnState: ColumnState[]
+  columnState?: ColumnState[]
 }
 /* eslint-enable */
 
