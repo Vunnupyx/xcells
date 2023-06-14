@@ -232,9 +232,9 @@ export const setFile = (node: NodeData): MapStoreAction => ({
   },
 })
 
-export const removeChildren = (node: NodeData): MapStoreAction => ({
+export const remove = (node: NodeData): MapStoreAction => ({
   node,
-  name: 'nodeRemoveChildren',
+  name: 'nodeRemove',
   reducer: doc => {
     const {id} = node
     if (id in doc.nodes) {
@@ -242,7 +242,7 @@ export const removeChildren = (node: NodeData): MapStoreAction => ({
       while (children && children.length) {
         const subChildren = [] as unknown as AutomergeList<NodeId>
         children.forEach(childId => {
-          if (doc.nodes[childId]?.children) subChildren.push(...(doc.nodes[childId].children as Array<NodeId>))
+          if (doc.nodes[childId].children) subChildren.push(...(doc.nodes[childId].children as Array<NodeId>))
           const {edges} = doc
           if (edges) {
             Object.entries(edges).forEach(([edgeId, edge]) => {
@@ -261,18 +261,7 @@ export const removeChildren = (node: NodeData): MapStoreAction => ({
         })
         children = subChildren
       }
-      doc.nodes[id].children = [] as unknown as AutomergeList<NodeId>
-    }
-  },
-})
 
-export const remove = (node: NodeData): MapStoreAction => ({
-  node,
-  name: 'nodeRemove',
-  reducer: doc => {
-    const {id} = node
-    if (id in doc.nodes) {
-      removeChildren(node).reducer(doc)
       const parentNodeId = doc.nodes[id].parent
       if (!parentNodeId) throw new Error(`Missing parent in node with id '${id}'`)
 
@@ -601,5 +590,40 @@ export const deleteCheckBox = (node: NodeData): MapStoreAction => ({
     if (!storeNode) throw new Error(`Cannot delete checkbox: Could not find node with id ${id}`)
 
     delete storeNode.checked
+  },
+})
+
+export const addPrompt = (node: NodeData, id: NodeId): MapStoreAction => ({
+  node,
+  name: 'nodeAddPrompt',
+  reducer: doc => {
+    const {id: parentId} = node
+    const parentNode = doc.nodes[parentId]
+    if (!parentNode.prompts) parentNode.prompts = [] as unknown as AutomergeList<NodeId>
+
+    if (!(id in doc.nodes)) {
+      throw new Error(`Prompts (${id}) does not exist`)
+    }
+
+    parentNode.prompts.push(id)
+  },
+})
+
+export const removePrompts = (node: NodeData): MapStoreAction => ({
+  node,
+  name: 'nodeRemovePrompts',
+  reducer: doc => {
+    const {id} = node
+    if (id in doc.nodes) {
+      const {prompts} = doc.nodes[id]
+      if (prompts && prompts.length) {
+        prompts.forEach(childId => {
+          if (childId in doc.nodes) {
+            remove(doc.nodes[childId]).reducer(doc)
+          }
+        })
+        delete doc.nodes[id].prompts
+      }
+    }
   },
 })

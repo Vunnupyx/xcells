@@ -54,6 +54,7 @@ export interface GridOptions {
 export type NodeContent = RenderNodeCandidate & {
   id?: NodeId
   children?: NodeId[]
+  prompts?: NodeId[]
   image?: ObjectId
   imagePosition?: ImagePositions
   file?: ObjectId
