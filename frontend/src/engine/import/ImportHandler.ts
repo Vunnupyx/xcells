@@ -1,7 +1,7 @@
 import * as plugins from './plugins'
 import {IImportPlugin} from './types'
 import type EventManager from '../events/EventManager'
-import {NodeDatas, NodeId} from '../types'
+import {MapData, NodeDatas, NodeId} from '../types'
 
 const pluginMapping = Object.fromEntries(
   Object.values(plugins)
@@ -31,7 +31,7 @@ export default class ImportHandler {
     })
   }
 
-  async runImport(data: Blob | File, parentNodeId: NodeId): Promise<void> {
+  async runImport(data: Blob | File, parentNodeId: NodeId): Promise<MapData[]> {
     const typeOrExtension = data.type || ('name' in data ? data.name.split('.').pop() : undefined)
 
     if (!typeOrExtension) throw new Error('No file type found.')
@@ -44,5 +44,6 @@ export default class ImportHandler {
 
     const mapDatas = await plugin.transform(data)
     mapDatas.forEach(({root, nodes}) => this.addNodeTree(nodes, root, parentNodeId))
+    return mapDatas
   }
 }

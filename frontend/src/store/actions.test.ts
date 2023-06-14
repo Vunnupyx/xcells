@@ -350,22 +350,6 @@ describe('MapStore actions', () => {
       expect(map.nodes.childId.borderColor).toBe(undefined)
     })
 
-    it('should remove children nodes', () => {
-      const removeNode = {id: 'rootId'}
-      map = Automerge.change(map, actions.removeChildren(removeNode).reducer)
-      expect(map.nodes.rootId.children?.length).toBe(0)
-      expect(map.nodes.childId).toBe(undefined)
-    })
-
-    it('should not remove any children node, while deleting a non-existed-node', () => {
-      const removeNode = {id: 'undefined'}
-
-      map = Automerge.change(map, actions.removeChildren(removeNode).reducer)
-
-      expect(map.nodes.rootId.children?.length).toBe(1)
-      expect(map.nodes.rootId.children).toContain('childId')
-    })
-
     it('should remove node', () => {
       // automerge is needed here as the "remove" action uses automerge functionality
       const removeNode = {id: 'childId'}
@@ -656,6 +640,29 @@ describe('MapStore actions', () => {
         map = Automerge.change(map, actions.deleteCheckBox({...node, checked: true}).reducer)
 
         expect('checked' in map.nodes.rootId).toBe(false)
+      })
+    })
+  })
+
+  describe('prompts related', () => {
+    let parentNode: NodeData
+    let promptNode: NodeData
+
+    beforeEach(() => {
+      parentNode = map.nodes.rootId
+      promptNode = map.nodes.childId
+    })
+
+    describe('addPrompt', () => {
+      it('should create a new prompts', () => {
+        map = Automerge.change(map, actions.addPrompt(parentNode, promptNode.id).reducer)
+        expect(map.nodes.rootId.prompts).toStrictEqual([promptNode.id])
+      })
+
+      it('should remove the prompts', () => {
+        map = Automerge.change(map, actions.removePrompts(parentNode).reducer)
+
+        expect(map.nodes.rootId.prompts).toBe(undefined)
       })
     })
   })

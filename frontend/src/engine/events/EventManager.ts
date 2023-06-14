@@ -13,7 +13,6 @@ import {
   addEdge,
   move,
   remove,
-  removeChildren,
   rescale,
   resize,
   setFile,
@@ -25,6 +24,8 @@ import {
   edit,
   setColor,
   setBorderColor,
+  addPrompt,
+  removePrompts,
 } from '../../store/actions'
 import {generateEdgeId, generateNodeId} from '../../shared/utils/generateId'
 
@@ -39,6 +40,7 @@ import {
   MapData,
   MapStoreAction,
   MapStoreActions,
+  NodeContent,
   NodeData,
   NodeId,
   RectangleData,
@@ -1221,34 +1223,20 @@ class EventManager extends Publisher {
   }
 
   replyChatGPTOnSingleLine = async (content: string, node: PixiNode) => {
-    const {scale} = CONFIG.nodes.create
-    const {addDispatch, nodeGrow, saveNodes, engine} = this
+    const {addDispatch} = this
     const {settings} = this.store
 
     if (!settings) return
 
-    const {candidate, nodeAbove} = node.getFreeChildPosition({parentNode: node})
     const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
 
     if (!completion) return
 
-    if (node.hasContent() && nodeAbove) {
-      nodeAbove.title = completion
-      addDispatch(edit(nodeAbove)).then()
-    } else {
-      const id = generateNodeId()
-      const nodeData = {
-        ...candidate,
-        title: completion,
-        scale,
-        id,
-      }
-      const newChild = engine.updateNode(nodeData, node, false)
-      nodeGrow(newChild.parentNode)
-
-      addDispatch(add(newChild)).then()
-      saveNodes().then()
+    const nodeData = {
+      title: completion,
     }
+    await addDispatch(removePrompts(node))
+    this.createChild(node, nodeData)
   }
 
   replyChatGPTOnMultiLine = async (content: string, node: PixiNode) => {
@@ -1261,11 +1249,13 @@ class EventManager extends Publisher {
 
     if (!completion) return
 
-    await addDispatch(removeChildren(node))
-    this.importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id).then()
+    await addDispatch(removePrompts(node))
+    const mapData = await this.importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id)
+
+    mapData.forEach(({root}) => addDispatch(addPrompt(node, root)))
   }
 
-  createChild = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: RenderNodeCandidate): PixiNode => {
+  createChild = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: Partial<NodeContent>): PixiNode => {
     const {addDispatch, nodeGrow, saveNodes, engine} = this
     const {scale} = CONFIG.nodes.create
     const id = generateNodeId()
