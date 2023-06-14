@@ -1223,7 +1223,7 @@ class EventManager extends Publisher {
   }
 
   replyChatGPTOnSingleLine = async (content: string, node: PixiNode) => {
-    const {addDispatch} = this
+    const {addDispatch, createChild} = this
     const {settings} = this.store
 
     if (!settings) return
@@ -1236,11 +1236,12 @@ class EventManager extends Publisher {
       title: completion,
     }
     await addDispatch(removePrompts(node))
-    this.createChild(node, nodeData)
+    const newChild = createChild(node, nodeData)
+    await addDispatch(addPrompt(node, newChild.id))
   }
 
   replyChatGPTOnMultiLine = async (content: string, node: PixiNode) => {
-    const {addDispatch} = this
+    const {addDispatch, importer} = this
     const {settings} = this.store
 
     if (!settings) return
@@ -1250,7 +1251,7 @@ class EventManager extends Publisher {
     if (!completion) return
 
     await addDispatch(removePrompts(node))
-    const mapData = await this.importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id)
+    const mapData = await importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id)
 
     mapData.forEach(({root}) => addDispatch(addPrompt(node, root)))
   }
