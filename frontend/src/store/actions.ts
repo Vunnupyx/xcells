@@ -242,7 +242,7 @@ export const remove = (node: NodeData): MapStoreAction => ({
       while (children && children.length) {
         const subChildren = [] as unknown as AutomergeList<NodeId>
         children.forEach(childId => {
-          if (doc.nodes[childId].children) subChildren.push(...(doc.nodes[childId].children as Array<NodeId>))
+          if (doc.nodes[childId]?.children) subChildren.push(...(doc.nodes[childId].children as Array<NodeId>))
           const {edges} = doc
           if (edges) {
             Object.entries(edges).forEach(([edgeId, edge]) => {
