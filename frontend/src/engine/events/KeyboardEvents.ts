@@ -451,14 +451,24 @@ class KeyboardEvents {
               const content = this._serializeChatGPT(title)
               if (title.endsWith(CHATGPT_SINGLE_LINE)) {
                 replyChatGPTOnSingleLine(content, lastSelectedNode)
+              } else {
+                replyChatGPTOnMultiLine(content, lastSelectedNode)
               }
-              replyChatGPTOnMultiLine(content, lastSelectedNode)
+              trackAction({
+                action: 'nodeAddPrompt',
+                key: 'enter',
+                nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
+              })
+            } else {
+              createSibling(lastSelectedNode, true)
               trackAction({
                 action: 'nodeAdd',
                 key: 'enter',
                 nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
               })
             }
+          } else if (lastSelectEdge) {
+            lastSelectEdge.closeTextField(false)
           }
         } else if (!control && shiftKey) {
           // line break, handled by text area
