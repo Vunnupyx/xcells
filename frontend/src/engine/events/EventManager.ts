@@ -26,7 +26,6 @@ import {
   setBorderColor,
   addPrompt,
   removePrompts,
-  editTable,
 } from '../../store/actions'
 import {generateEdgeId, generateNodeId} from '../../shared/utils/generateId'
 
@@ -1260,39 +1259,28 @@ class EventManager extends Publisher {
 
   replyChatGPTOnTable = async (content: string, node: PixiNode) => {
     const {width, height} = CONFIG.nodes.addTableSettings.style
-    const {addDispatch, nodeGrow, saveNodes, engine} = this
+    const {addDispatch, createChild} = this
     const {settings} = this.store
-    const id = generateNodeId()
 
     if (!settings) return
 
-    const {candidate, nodeAbove} = node.getFreeChildPosition({parentNode: node})
     const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
 
     if (!completion) return
 
     try {
       const extracted = BlockLexer.lex(completion)
-      if (node.hasContent() && nodeAbove) {
-        nodeAbove.dirty = false
-        nodeAbove.gridOptions = extracted
-        await addDispatch(editTable(nodeAbove))
-      } else {
-        const nodeData = {
-          ...candidate,
-          gridOptions: extracted,
-          width,
-          height,
-          id,
-        }
-        const newChild = engine.updateNode(nodeData, node, false)
-        nodeGrow(node)
 
-        await addDispatch(add(newChild))
-        await saveNodes()
-
-        this.selectSingleNode(newChild)
+      const nodeData = {
+        gridOptions: extracted,
+        width,
+        height,
       }
+
+      await addDispatch(removePrompts(node))
+      const newChild = createChild(node, nodeData)
+      await addDispatch(addPrompt(node, newChild.id))
+      this.selectSingleNode(newChild)
     } catch (e) {
       logError(e)
     }
