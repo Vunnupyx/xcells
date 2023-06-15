@@ -643,6 +643,29 @@ describe('MapStore actions', () => {
       })
     })
   })
+
+  describe('prompts related', () => {
+    let parentNode: NodeData
+    let promptNode: NodeData
+
+    beforeEach(() => {
+      parentNode = map.nodes.rootId
+      promptNode = map.nodes.childId
+    })
+
+    describe('addPrompt', () => {
+      it('should create a new prompts', () => {
+        map = Automerge.change(map, actions.addPrompt(parentNode, promptNode.id).reducer)
+        expect(map.nodes.rootId.prompts).toStrictEqual([promptNode.id])
+      })
+
+      it('should remove the prompts', () => {
+        map = Automerge.change(map, actions.removePrompts(parentNode).reducer)
+
+        expect(map.nodes.rootId.prompts).toBe(undefined)
+      })
+    })
+  })
 })
 
 describe('all actions', () => {
