@@ -1251,9 +1251,10 @@ class EventManager extends Publisher {
   }
 
   replyChatGPTOnTable = async (content: string, node: PixiNode) => {
-    const {scale} = CONFIG.nodes.create
+    const {width, height} = CONFIG.nodes.addTableSettings.style
     const {addDispatch, nodeGrow, saveNodes, engine} = this
     const {settings} = this.store
+    const id = generateNodeId()
 
     if (!settings) return
 
@@ -1269,11 +1270,11 @@ class EventManager extends Publisher {
         nodeAbove.gridOptions = extracted
         await addDispatch(editTable(nodeAbove))
       } else {
-        const id = generateNodeId()
         const nodeData = {
           ...candidate,
           gridOptions: extracted,
-          scale,
+          width,
+          height,
           id,
         }
         const newChild = engine.updateNode(nodeData, node, false)
