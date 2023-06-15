@@ -24,6 +24,8 @@ import {
   edit,
   setColor,
   setBorderColor,
+  addPrompt,
+  removePrompts,
   editTable,
 } from '../../store/actions'
 import {generateEdgeId, generateNodeId} from '../../shared/utils/generateId'
@@ -39,6 +41,7 @@ import {
   MapData,
   MapStoreAction,
   MapStoreActions,
+  NodeContent,
   NodeData,
   NodeId,
   RectangleData,
@@ -1221,33 +1224,38 @@ class EventManager extends Publisher {
     node.openTextField('', 'end')
   }
 
-  replyChatGPTAnswer = async (content: string, node: PixiNode) => {
-    const {scale} = CONFIG.nodes.create
-    const {addDispatch, nodeGrow, saveNodes, engine} = this
+  replyChatGPTOnSingleLine = async (content: string, node: PixiNode) => {
+    const {addDispatch, createChild} = this
     const {settings} = this.store
 
     if (!settings) return
 
-    const {candidate, nodeAbove} = node.getFreeChildPosition({parentNode: node})
     const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
 
-    if (node.hasContent() && nodeAbove) {
-      nodeAbove.title = completion
-      addDispatch(edit(nodeAbove)).then()
-    } else {
-      const id = generateNodeId()
-      const nodeData = {
-        ...candidate,
-        title: completion,
-        scale,
-        id,
-      }
-      const newChild = engine.updateNode(nodeData, node, false)
-      nodeGrow(newChild.parentNode)
+    if (!completion) return
 
-      addDispatch(add(newChild)).then()
-      saveNodes().then()
+    const nodeData = {
+      title: completion,
     }
+    await addDispatch(removePrompts(node))
+    const newChild = createChild(node, nodeData)
+    await addDispatch(addPrompt(node, newChild.id))
+  }
+
+  replyChatGPTOnMultiLine = async (content: string, node: PixiNode) => {
+    const {addDispatch, importer} = this
+    const {settings} = this.store
+
+    if (!settings) return
+
+    const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
+
+    if (!completion) return
+
+    await addDispatch(removePrompts(node))
+    const mapData = await importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id)
+
+    mapData.forEach(({root}) => addDispatch(addPrompt(node, root)))
   }
 
   replyChatGPTOnTable = async (content: string, node: PixiNode) => {
@@ -1288,7 +1296,7 @@ class EventManager extends Publisher {
     }
   }
 
-  createChild = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: RenderNodeCandidate): PixiNode => {
+  createChild = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: Partial<NodeContent>): PixiNode => {
     const {addDispatch, nodeGrow, saveNodes, engine} = this
     const {scale} = CONFIG.nodes.create
     const id = generateNodeId()

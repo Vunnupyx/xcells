@@ -19,6 +19,7 @@ const logError = log.extend('ERROR*', '::')
 
 const MAP_MIME_TYPE = 'application/json'
 const CHATGPT_QUERY = '/chatgpt'
+const CHATGPT_SINGLE_LINE = '--join'
 const CHATGPT_TABLE = '--table'
 
 type FileTypes = 'image' | 'file'
@@ -294,7 +295,8 @@ class KeyboardEvents {
       lastSelectedNode,
       selectNode,
       createSibling,
-      replyChatGPTAnswer,
+      replyChatGPTOnSingleLine,
+      replyChatGPTOnMultiLine,
       replyChatGPTOnTable,
       createChildAndSelect,
       scaleUp,
@@ -449,17 +451,28 @@ class KeyboardEvents {
 
             if (typeof title === 'string' && title.startsWith(CHATGPT_QUERY)) {
               const content = this._serializeChatGPT(title)
-              if (title.endsWith(CHATGPT_TABLE)) {
+              if (title.endsWith(CHATGPT_SINGLE_LINE)) {
+                replyChatGPTOnSingleLine(content, lastSelectedNode)
+              } else if (title.endsWith(CHATGPT_TABLE)) {
                 replyChatGPTOnTable(content, lastSelectedNode)
               } else {
-                replyChatGPTAnswer(content, lastSelectedNode)
+                replyChatGPTOnMultiLine(content, lastSelectedNode)
               }
+              trackAction({
+                action: 'nodeAddPrompt',
+                key: 'enter',
+                nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
+              })
+            } else {
+              createSibling(lastSelectedNode, true)
               trackAction({
                 action: 'nodeAdd',
                 key: 'enter',
                 nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
               })
             }
+          } else if (lastSelectEdge) {
+            lastSelectEdge.closeTextField(false)
           }
         } else if (!control && shiftKey) {
           // line break, handled by text area
@@ -584,7 +597,7 @@ class KeyboardEvents {
   }
 
   private _serializeChatGPT = (content: string): string => {
-    return content.replace(new RegExp(`${CHATGPT_QUERY}|${CHATGPT_TABLE}`, 'g'), '').trim()
+    return content.replace(new RegExp(`${CHATGPT_QUERY}|${CHATGPT_SINGLE_LINE}|${CHATGPT_TABLE}`, 'g'), '').trim()
   }
 }
 
