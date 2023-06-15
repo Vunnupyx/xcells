@@ -1286,10 +1286,12 @@ class EventManager extends Publisher {
           id,
         }
         const newChild = engine.updateNode(nodeData, node, false)
-        nodeGrow(newChild.parentNode)
+        nodeGrow(node)
 
         await addDispatch(add(newChild))
         await saveNodes()
+
+        this.selectSingleNode(newChild)
       }
     } catch (e) {
       logError(e)
