@@ -162,8 +162,9 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
           loadImage.src = ''
           this.node.dirty = true
           if (this.texture.baseTexture.valid) {
-            this.texture.baseTexture.resource.update()
+            await this.texture.baseTexture.resource.update()
           }
+          await this.texture.baseTexture.resource.load()
           resolve()
         }
         const svgURL = new XMLSerializer().serializeToString(this._svgRoot)
@@ -173,7 +174,7 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
     }
   }
 
-  redraw(nodeDetails: NodeDetail): void {
+  async redraw(nodeDetails: NodeDetail): Promise<void> {
     const {node, texture} = this
     const {headerHeight, imagePosition: storeImagePosition, width, height} = this.node
     const {borderSize: styleBorderSize, cardSiblingSeparator} = CONFIG.nodes
@@ -185,7 +186,7 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
 
     if (!showImage) return
 
-    this.updateImage()
+    await this.updateImage()
 
     const borderSize = node.getBorderColor() ? styleBorderSize : styleBorderSize
 
@@ -210,13 +211,11 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
         }
         this.x = borderSize + innerWidth / 2 - this.width / 2
         this.y = headerHeight
-        texture.frame = new PIXI.Rectangle(0, 0, textureWidth, textureHeight)
       } else if (imagePosition === IMAGE_POSITIONS.stretch) {
         this.x = borderSize
         this.y = borderSize
         this.width = innerWidth
         this.height = innerHeight
-        texture.frame = new PIXI.Rectangle(0, 0, textureWidth, textureHeight)
       } else if (imagePosition === IMAGE_POSITIONS.fullWidth) {
         const relativeImageHeight = textureHeight * (innerWidth / textureWidth)
 
@@ -226,21 +225,11 @@ class NodeHtml extends PIXI.Sprite implements IDisplayObjectTypeCategoryNode {
 
         if (innerHeight < relativeImageHeight) {
           this.height = innerHeight
-          texture.frame = new PIXI.Rectangle(0, 0, textureWidth, textureWidth * (innerHeight / innerWidth))
         } else {
           this.height = relativeImageHeight
-          texture.frame = new PIXI.Rectangle(0, 0, textureWidth, textureHeight)
         }
       } else {
         // IMAGE_POSITIONS.crop
-        const isImageHigher = innerWidth / textureWidth > innerHeight / textureHeight
-        if (isImageHigher) {
-          const offset = 0.5 * Math.round(textureHeight - textureWidth * (innerHeight / innerWidth))
-          texture.frame = new PIXI.Rectangle(0, offset, textureWidth, textureHeight - 2 * offset)
-        } else {
-          const offset = 0.5 * Math.round(textureWidth - textureHeight * (innerWidth / innerHeight))
-          texture.frame = new PIXI.Rectangle(offset, 0, textureWidth - 2 * offset, textureHeight)
-        }
         this.x = borderSize
         this.y = borderSize
         this.width = innerWidth

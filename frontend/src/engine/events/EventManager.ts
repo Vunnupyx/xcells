@@ -55,6 +55,7 @@ import ImportHandler from '../import/ImportHandler'
 import BoundedArray from '../../utils/BoundedArray'
 import createMoveSteps from '../utils/createMoveSteps'
 import {createChatCompletion} from '../utils/openAI'
+import {BlockLexer} from '../utils/marked/block-lexer'
 
 const log = debug('app:Event:EventManager')
 const logError = log.extend('ERROR*', '::')
@@ -1254,6 +1255,35 @@ class EventManager extends Publisher {
     const mapData = await importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id)
 
     mapData.forEach(({root}) => addDispatch(addPrompt(node, root)))
+  }
+
+  replyChatGPTOnTable = async (content: string, node: PixiNode) => {
+    const {width, height} = CONFIG.nodes.addTableSettings.style
+    const {addDispatch, createChild} = this
+    const {settings} = this.store
+
+    if (!settings) return
+
+    const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
+
+    if (!completion) return
+
+    try {
+      const extracted = BlockLexer.lex(completion)
+
+      const nodeData = {
+        gridOptions: extracted,
+        width,
+        height,
+      }
+
+      await addDispatch(removePrompts(node))
+      const newChild = createChild(node, nodeData)
+      await addDispatch(addPrompt(node, newChild.id))
+      this.selectSingleNode(newChild)
+    } catch (e) {
+      logError(e)
+    }
   }
 
   createChild = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: Partial<NodeContent>): PixiNode => {
