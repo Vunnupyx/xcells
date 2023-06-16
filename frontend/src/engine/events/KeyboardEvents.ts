@@ -20,6 +20,7 @@ const logError = log.extend('ERROR*', '::')
 const MAP_MIME_TYPE = 'application/json'
 const CHATGPT_QUERY = '/chatgpt'
 const CHATGPT_SINGLE_LINE = '--join'
+const CHATGPT_TABLE = '--table'
 
 type FileTypes = 'image' | 'file'
 
@@ -296,6 +297,7 @@ class KeyboardEvents {
       createSibling,
       replyChatGPTOnSingleLine,
       replyChatGPTOnMultiLine,
+      replyChatGPTOnTable,
       createChildAndSelect,
       scaleUp,
       scaleDown,
@@ -451,6 +453,8 @@ class KeyboardEvents {
               const content = this._serializeChatGPT(title)
               if (title.endsWith(CHATGPT_SINGLE_LINE)) {
                 replyChatGPTOnSingleLine(content, lastSelectedNode)
+              } else if (title.endsWith(CHATGPT_TABLE)) {
+                replyChatGPTOnTable(content, lastSelectedNode)
               } else {
                 replyChatGPTOnMultiLine(content, lastSelectedNode)
               }
@@ -593,7 +597,7 @@ class KeyboardEvents {
   }
 
   private _serializeChatGPT = (content: string): string => {
-    return content.replace(new RegExp(`${CHATGPT_QUERY}|${CHATGPT_SINGLE_LINE}`, 'g'), '').trim()
+    return content.replace(new RegExp(`${CHATGPT_QUERY}|${CHATGPT_SINGLE_LINE}|${CHATGPT_TABLE}`, 'g'), '').trim()
   }
 }
 
