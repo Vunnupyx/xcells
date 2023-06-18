@@ -1223,7 +1223,7 @@ class EventManager extends Publisher {
   }
 
   replyChatGPTOnSingleLine = async (content: string, node: PixiNode) => {
-    const {addDispatch, createChildAndSelect} = this
+    const {addDispatch, createChild} = this
     const {settings} = this.store
 
     if (!settings) return
@@ -1236,14 +1236,13 @@ class EventManager extends Publisher {
       title: completion,
     }
     await addDispatch(removePrompts(node))
-    const newChild = createChildAndSelect(node, nodeData)
+    const newChild = createChild(node, nodeData)
     await addDispatch(addPrompt(node, newChild.id))
   }
 
   replyChatGPTOnMultiLine = async (content: string, node: PixiNode) => {
-    const {addDispatch, importer, selectSingleNode, nodeEdit} = this
+    const {addDispatch, importer} = this
     const {settings} = this.store
-    let lastNodeId: string | undefined
 
     if (!settings) return
 
@@ -1254,15 +1253,7 @@ class EventManager extends Publisher {
     await addDispatch(removePrompts(node))
     const mapData = await importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id)
 
-    mapData.forEach(({root}) => {
-      lastNodeId = root
-      addDispatch(addPrompt(node, root))
-    })
-
-    if (lastNodeId) {
-      selectSingleNode(lastNodeId)
-      nodeEdit(lastNodeId)
-    }
+    mapData.forEach(({root}) => addDispatch(addPrompt(node, root)))
   }
 
   replyChatGPTOnTable = async (content: string, node: PixiNode) => {
