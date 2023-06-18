@@ -1241,7 +1241,7 @@ class EventManager extends Publisher {
   }
 
   replyChatGPTOnMultiLine = async (content: string, node: PixiNode) => {
-    const {addDispatch, importer, getNode, selectSingleNode} = this
+    const {addDispatch, importer, selectSingleNode, nodeEdit} = this
     const {settings} = this.store
     let lastNodeId: string | undefined
 
@@ -1260,9 +1260,8 @@ class EventManager extends Publisher {
     })
 
     if (lastNodeId) {
-      const lastChild = getNode(lastNodeId)
-      selectSingleNode(lastChild)
-      lastChild.openTextField('', 'end')
+      selectSingleNode(lastNodeId)
+      nodeEdit(lastNodeId)
     }
   }
 
