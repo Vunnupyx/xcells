@@ -45,7 +45,6 @@ import {
   NodeId,
   RectangleData,
   RenderEngineEvent,
-  RenderNodeCandidate,
 } from '../types'
 import rectIntersectsRect from '../utils/intersect/rectIntersectsRect'
 import {isEqual, isGreaterOrEqual, isGreaterThan, isLessThan, isZero} from '../utils/arithmetics'
@@ -1224,7 +1223,7 @@ class EventManager extends Publisher {
   }
 
   replyChatGPTOnSingleLine = async (content: string, node: PixiNode) => {
-    const {addDispatch, createChild} = this
+    const {addDispatch, createChildAndSelect} = this
     const {settings} = this.store
 
     if (!settings) return
@@ -1237,13 +1236,14 @@ class EventManager extends Publisher {
       title: completion,
     }
     await addDispatch(removePrompts(node))
-    const newChild = createChild(node, nodeData)
+    const newChild = createChildAndSelect(node, nodeData)
     await addDispatch(addPrompt(node, newChild.id))
   }
 
   replyChatGPTOnMultiLine = async (content: string, node: PixiNode) => {
-    const {addDispatch, importer} = this
+    const {addDispatch, importer, getNode, selectSingleNode} = this
     const {settings} = this.store
+    let lastNodeId: string | undefined
 
     if (!settings) return
 
@@ -1254,12 +1254,21 @@ class EventManager extends Publisher {
     await addDispatch(removePrompts(node))
     const mapData = await importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id)
 
-    mapData.forEach(({root}) => addDispatch(addPrompt(node, root)))
+    mapData.forEach(({root}) => {
+      lastNodeId = root
+      addDispatch(addPrompt(node, root))
+    })
+
+    if (lastNodeId) {
+      const lastChild = getNode(lastNodeId)
+      selectSingleNode(lastChild)
+      lastChild.openTextField('', 'end')
+    }
   }
 
   replyChatGPTOnTable = async (content: string, node: PixiNode) => {
     const {width, height} = CONFIG.nodes.addTableSettings.style
-    const {addDispatch, createChild} = this
+    const {addDispatch, createChild, selectSingleNode} = this
     const {settings} = this.store
 
     if (!settings) return
@@ -1280,7 +1289,7 @@ class EventManager extends Publisher {
       await addDispatch(removePrompts(node))
       const newChild = createChild(node, nodeData)
       await addDispatch(addPrompt(node, newChild.id))
-      this.selectSingleNode(newChild)
+      selectSingleNode(newChild)
     } catch (e) {
       logError(e)
     }
@@ -1312,7 +1321,7 @@ class EventManager extends Publisher {
     return newChild
   }
 
-  createChildAndSelect = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: RenderNodeCandidate): PixiNode => {
+  createChildAndSelect = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: Partial<NodeContent>): PixiNode => {
     const {createChild} = this
 
     const newChild = createChild(parentNodeOrId, additionalNodeData)
