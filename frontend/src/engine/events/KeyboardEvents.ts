@@ -448,7 +448,12 @@ class KeyboardEvents {
             if (lastSelectedNode.state.isTemporary) {
               saveTemporaryNode(lastSelectedNode)
             }
-
+            createSibling(lastSelectedNode, true)
+            trackAction({
+              action: 'nodeAdd',
+              key: 'enter',
+              nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
+            })
             if (typeof title === 'string' && title.startsWith(CHATGPT_QUERY)) {
               const content = this._serializeChatGPT(title)
               if (title.endsWith(CHATGPT_SINGLE_LINE)) {
@@ -460,13 +465,6 @@ class KeyboardEvents {
               }
               trackAction({
                 action: 'nodeAddPrompt',
-                key: 'enter',
-                nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
-              })
-            } else {
-              createSibling(lastSelectedNode, true)
-              trackAction({
-                action: 'nodeAdd',
                 key: 'enter',
                 nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
               })

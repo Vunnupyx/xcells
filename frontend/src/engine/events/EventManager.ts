@@ -45,7 +45,6 @@ import {
   NodeId,
   RectangleData,
   RenderEngineEvent,
-  RenderNodeCandidate,
 } from '../types'
 import rectIntersectsRect from '../utils/intersect/rectIntersectsRect'
 import {isEqual, isGreaterOrEqual, isGreaterThan, isLessThan, isZero} from '../utils/arithmetics'
@@ -1259,7 +1258,7 @@ class EventManager extends Publisher {
 
   replyChatGPTOnTable = async (content: string, node: PixiNode) => {
     const {width, height} = CONFIG.nodes.addTableSettings.style
-    const {addDispatch, createChild} = this
+    const {addDispatch, createChild, selectSingleNode} = this
     const {settings} = this.store
 
     if (!settings) return
@@ -1280,7 +1279,7 @@ class EventManager extends Publisher {
       await addDispatch(removePrompts(node))
       const newChild = createChild(node, nodeData)
       await addDispatch(addPrompt(node, newChild.id))
-      this.selectSingleNode(newChild)
+      selectSingleNode(newChild)
     } catch (e) {
       logError(e)
     }
@@ -1312,7 +1311,7 @@ class EventManager extends Publisher {
     return newChild
   }
 
-  createChildAndSelect = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: RenderNodeCandidate): PixiNode => {
+  createChildAndSelect = (parentNodeOrId: PixiNode | NodeId, additionalNodeData?: Partial<NodeContent>): PixiNode => {
     const {createChild} = this
 
     const newChild = createChild(parentNodeOrId, additionalNodeData)
