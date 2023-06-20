@@ -1241,24 +1241,7 @@ class EventManager extends Publisher {
   }
 
   replyChatGPTOnMultiLine = async (content: string, node: PixiNode) => {
-    const {addDispatch, importer} = this
-    const {settings} = this.store
-
-    if (!settings) return
-
-    const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
-
-    if (!completion) return
-
-    await addDispatch(removePrompts(node))
-    const mapData = await importer.runImport(new Blob([completion], {type: 'text/plain'}), node.id)
-
-    mapData.forEach(({root}) => addDispatch(addPrompt(node, root)))
-  }
-
-  replyChatGPTOnTable = async (content: string, node: PixiNode) => {
-    const {width, height} = CONFIG.nodes.addTableSettings.style
-    const {addDispatch, createChild, selectSingleNode} = this
+    const {addDispatch, createChild} = this
     const {settings} = this.store
 
     if (!settings) return
@@ -1269,17 +1252,35 @@ class EventManager extends Publisher {
 
     try {
       const extracted = BlockLexer.lex(completion)
-
-      const nodeData = {
-        gridOptions: extracted,
-        width,
-        height,
-      }
-
       await addDispatch(removePrompts(node))
-      const newChild = createChild(node, nodeData)
-      await addDispatch(addPrompt(node, newChild.id))
-      selectSingleNode(newChild)
+      extracted.forEach(nodeData => {
+        const newChild = createChild(node, nodeData)
+        addDispatch(addPrompt(node, newChild.id))
+      })
+    } catch (e) {
+      logError(e)
+    }
+  }
+
+  replyChatGPTOnTable = async (content: string, node: PixiNode) => {
+    const {addDispatch, createChildAndSelect} = this
+    const {settings} = this.store
+
+    if (!settings) return
+
+    const completion = await createChatCompletion([{role: 'user', content}], settings.openai.apiKey)
+
+    if (!completion) return
+
+    try {
+      const extracted = BlockLexer.lex(completion)
+      await addDispatch(removePrompts(node))
+      extracted
+        .filter(x => x.gridOptions)
+        .forEach(nodeData => {
+          const newChild = createChildAndSelect(node, {...nodeData, title: ''})
+          addDispatch(addPrompt(node, newChild.id))
+        })
     } catch (e) {
       logError(e)
     }
