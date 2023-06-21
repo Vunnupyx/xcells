@@ -26,6 +26,7 @@ import {
   setBorderColor,
   addPrompt,
   removePrompts,
+  editTable,
 } from '../../store/actions'
 import {generateEdgeId, generateNodeId} from '../../shared/utils/generateId'
 
@@ -1241,7 +1242,8 @@ class EventManager extends Publisher {
   }
 
   replyChatGPTOnMultiLine = async (content: string, node: PixiNode) => {
-    const {addDispatch, createChild} = this
+    const {width, height} = CONFIG.nodes.addTableSettings.style
+    const {addDispatch, createChild, engine} = this
     const {settings} = this.store
 
     if (!settings) return
@@ -1251,11 +1253,40 @@ class EventManager extends Publisher {
     if (!completion) return
 
     try {
-      const extracted = BlockLexer.lex(completion)
       await addDispatch(removePrompts(node))
-      extracted.forEach(nodeData => {
-        const newChild = createChild(node, nodeData)
-        addDispatch(addPrompt(node, newChild.id))
+      const lines = completion.split('\n\n')
+
+      lines.forEach(s => {
+        let lastNodeId: string
+        const {text, gridOptions} = BlockLexer.lex(s)
+
+        this.importer.runImport(new Blob([text], {type: 'text/plain'}), node.id).then(mapData => {
+          mapData.forEach(({root}) => {
+            addDispatch(addPrompt(node, root))
+            lastNodeId = root
+          })
+          if (gridOptions) {
+            if (lastNodeId) {
+              const nodeData = engine.renderNodes[lastNodeId]
+              if (nodeData) {
+                Object.assign(nodeData, {
+                  width,
+                  height,
+                  gridOptions,
+                })
+                addDispatch(editTable(nodeData))
+              }
+            } else {
+              const nodeData = {
+                width,
+                height,
+                gridOptions,
+              }
+              const newChild = createChild(node, nodeData)
+              addDispatch(addPrompt(node, newChild.id))
+            }
+          }
+        })
       })
     } catch (e) {
       logError(e)
@@ -1263,7 +1294,8 @@ class EventManager extends Publisher {
   }
 
   replyChatGPTOnTable = async (content: string, node: PixiNode) => {
-    const {addDispatch, createChildAndSelect} = this
+    const {width, height} = CONFIG.nodes.addTableSettings.style
+    const {addDispatch, createChild, selectSingleNode} = this
     const {settings} = this.store
 
     if (!settings) return
@@ -1273,14 +1305,18 @@ class EventManager extends Publisher {
     if (!completion) return
 
     try {
-      const extracted = BlockLexer.lex(completion)
+      const {gridOptions} = BlockLexer.lex(completion)
+
+      const nodeData = {
+        gridOptions,
+        width,
+        height,
+      }
+
       await addDispatch(removePrompts(node))
-      extracted
-        .filter(x => x.gridOptions)
-        .forEach(nodeData => {
-          const newChild = createChildAndSelect(node, {...nodeData, title: ''})
-          addDispatch(addPrompt(node, newChild.id))
-        })
+      const newChild = createChild(node, nodeData)
+      await addDispatch(addPrompt(node, newChild.id))
+      selectSingleNode(newChild)
     } catch (e) {
       logError(e)
     }

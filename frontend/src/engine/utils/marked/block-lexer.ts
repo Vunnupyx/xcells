@@ -1,7 +1,6 @@
 /* eslint-disable no-cond-assign, no-continue */
-import {RulesBlockBase, RulesBlockTables} from './interfaces'
-import {GridOptions, NodeContent} from '../../types'
-import CONFIG from '../../CONFIG'
+import {LexerReturns, RulesBlockBase, RulesBlockTables} from './interfaces'
+import {GridOptions} from '../../types'
 
 export class BlockLexer {
   protected static rulesBase: RulesBlockBase
@@ -10,7 +9,9 @@ export class BlockLexer {
 
   protected rules: RulesBlockBase | RulesBlockTables
 
-  protected nodes: NodeContent[] = []
+  protected text = ''
+
+  protected gridOptions: GridOptions | undefined
 
   constructor(protected staticThis: typeof BlockLexer) {
     this.rules = this.staticThis.getRulesTable()
@@ -21,7 +22,7 @@ export class BlockLexer {
    *
    * @param src String of markdown source to be compiled.
    */
-  static lex(src: string): NodeContent[] {
+  static lex(src: string): LexerReturns {
     src = src
       .replace(/\r\n|\r/g, '\n')
       .replace(/\t/g, '    ')
@@ -63,15 +64,14 @@ export class BlockLexer {
   /**
    * Lexing.
    */
-  protected getTokens(src: string): NodeContent[] {
-    const {width, height} = CONFIG.nodes.addTableSettings.style
+  protected getTokens(src: string): LexerReturns {
     let nextPart = src
     let execArr: RegExpExecArray | null
     while (nextPart) {
-      const currentNode: NodeContent = {}
       // newline
       if ((execArr = this.rules.newline.exec(nextPart))) {
         nextPart = nextPart.substring(execArr[0].length)
+        this.text += execArr[0]
       }
 
       // table no leading pipe (gfm)
@@ -93,19 +93,7 @@ export class BlockLexer {
               gridOptions.rowData[i] = Object.fromEntries(gridOptions.columnDefs.map((x, j) => [x.field, td[j]]))
             }
           }
-        if (this.nodes.length) {
-          Object.assign(this.nodes[this.nodes.length - 1], {
-            width,
-            height,
-            gridOptions,
-          })
-        } else {
-          Object.assign(currentNode, {
-            width,
-            height,
-            gridOptions,
-          })
-        }
+        this.gridOptions = gridOptions
       }
 
       // table (gfm)
@@ -129,39 +117,22 @@ export class BlockLexer {
               gridOptions.rowData[i] = Object.fromEntries(gridOptions.columnDefs.map((x, j) => [x.field, td[j]]))
             }
           }
-        if (this.nodes.length) {
-          Object.assign(this.nodes[this.nodes.length - 1], {
-            width,
-            height,
-            gridOptions,
-          })
-        } else {
-          Object.assign(currentNode, {
-            width,
-            height,
-            gridOptions,
-          })
-        }
+        this.gridOptions = gridOptions
       }
 
       // text
       // Top-level should never reach here.
       if ((execArr = this.rules.text.exec(nextPart))) {
         nextPart = nextPart.substring(execArr[0].length)
-        Object.assign(currentNode, {
-          title: execArr[0],
-        })
-        this.nodes.push(currentNode)
+        this.text += execArr[0]
         continue
       }
 
       if (nextPart) {
         throw new Error(`Infinite loop on byte: ${nextPart.charCodeAt(0)}, near text '${nextPart.slice(0, 30)}...'`)
       }
-
-      if (currentNode) this.nodes.push(currentNode)
     }
 
-    return this.nodes
+    return {text: this.text, gridOptions: this.gridOptions}
   }
 }
