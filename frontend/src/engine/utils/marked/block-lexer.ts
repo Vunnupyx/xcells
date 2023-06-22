@@ -1,5 +1,5 @@
 /* eslint-disable no-cond-assign, no-continue */
-import {RulesBlockBase, RulesBlockTables} from './interfaces'
+import {LexerReturns, RulesBlockBase, RulesBlockTables} from './interfaces'
 import {GridOptions} from '../../types'
 
 export class BlockLexer {
@@ -8,6 +8,10 @@ export class BlockLexer {
   protected static rulesTables: RulesBlockTables
 
   protected rules: RulesBlockBase | RulesBlockTables
+
+  protected text = ''
+
+  protected gridOptions: GridOptions | undefined
 
   constructor(protected staticThis: typeof BlockLexer) {
     this.rules = this.staticThis.getRulesTable()
@@ -18,7 +22,7 @@ export class BlockLexer {
    *
    * @param src String of markdown source to be compiled.
    */
-  static lex(src: string): GridOptions {
+  static lex(src: string): LexerReturns {
     src = src
       .replace(/\r\n|\r/g, '\n')
       .replace(/\t/g, '    ')
@@ -27,7 +31,7 @@ export class BlockLexer {
       .replace(/^ +$/gm, '')
 
     const lexer = new this(this)
-    return lexer.getTable(src)
+    return lexer.getTokens(src)
   }
 
   protected static getRulesBase(): RulesBlockBase {
@@ -60,13 +64,14 @@ export class BlockLexer {
   /**
    * Lexing.
    */
-  protected getTable(src: string): GridOptions {
+  protected getTokens(src: string): LexerReturns {
     let nextPart = src
     let execArr: RegExpExecArray | null
     while (nextPart) {
       // newline
       if ((execArr = this.rules.newline.exec(nextPart))) {
         nextPart = nextPart.substring(execArr[0].length)
+        this.text += execArr[0]
       }
 
       // table no leading pipe (gfm)
@@ -88,7 +93,7 @@ export class BlockLexer {
               gridOptions.rowData[i] = Object.fromEntries(gridOptions.columnDefs.map((x, j) => [x.field, td[j]]))
             }
           }
-        return gridOptions
+        this.gridOptions = gridOptions
       }
 
       // table (gfm)
@@ -112,14 +117,14 @@ export class BlockLexer {
               gridOptions.rowData[i] = Object.fromEntries(gridOptions.columnDefs.map((x, j) => [x.field, td[j]]))
             }
           }
-
-        return gridOptions
+        this.gridOptions = gridOptions
       }
 
       // text
       // Top-level should never reach here.
       if ((execArr = this.rules.text.exec(nextPart))) {
         nextPart = nextPart.substring(execArr[0].length)
+        this.text += execArr[0]
         continue
       }
 
@@ -128,6 +133,6 @@ export class BlockLexer {
       }
     }
 
-    return {}
+    return {text: this.text, gridOptions: this.gridOptions}
   }
 }
