@@ -426,7 +426,14 @@ class KeyboardEvents {
       } else if (isFocusedRenderEngine) {
         if (!control && !shiftKey) {
           if (lastSelectedNode) {
-            lastSelectedNode.openTextField(undefined, 'selectAll')
+            const {title} = lastSelectedNode
+            if (typeof title === 'string' && title.startsWith(CHATGPT_QUERY)) {
+              const siblingsTitle = [lastSelectedNode, ...lastSelectedNode.childNodes].map(n => n.title).join('\n')
+              const content = this._serializeChatGPT(siblingsTitle)
+              replyChatGPTOnMultiLine(content, lastSelectedNode)
+            } else {
+              lastSelectedNode.openTextField(undefined, 'selectAll')
+            }
           } else if (lastSelectEdge) {
             lastSelectEdge.openTextField(undefined, 'selectAll')
           }
