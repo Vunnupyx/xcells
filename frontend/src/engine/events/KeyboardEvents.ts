@@ -426,14 +426,7 @@ class KeyboardEvents {
       } else if (isFocusedRenderEngine) {
         if (!control && !shiftKey) {
           if (lastSelectedNode) {
-            const {title} = lastSelectedNode
-            if (typeof title === 'string' && title.startsWith(CHATGPT_QUERY)) {
-              const siblingsTitle = [lastSelectedNode, ...lastSelectedNode.childNodes].map(n => n.title).join('\n')
-              const content = this._serializeChatGPT(siblingsTitle)
-              replyChatGPTOnMultiLine(content, lastSelectedNode)
-            } else {
-              lastSelectedNode.openTextField(undefined, 'selectAll')
-            }
+            lastSelectedNode.openTextField(undefined, 'selectAll')
           } else if (lastSelectEdge) {
             lastSelectEdge.openTextField(undefined, 'selectAll')
           }
@@ -462,12 +455,18 @@ class KeyboardEvents {
               nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
             })
             if (typeof title === 'string' && title.startsWith(CHATGPT_QUERY)) {
-              const content = this._serializeChatGPT(title)
+              let content = this._serializeChatGPT(title)
               if (title.endsWith(CHATGPT_SINGLE_LINE)) {
                 replyChatGPTOnSingleLine(content, lastSelectedNode)
               } else if (title.endsWith(CHATGPT_TABLE)) {
                 replyChatGPTOnTable(content, lastSelectedNode)
               } else {
+                const {prompts} = lastSelectedNode
+                if (prompts && prompts.length) {
+                  const childNodes = [...lastSelectedNode.childNodes].filter(n => !prompts?.includes(n.id))
+                  const nodesTitle = [lastSelectedNode, ...childNodes].map(n => n.title).join('\n')
+                  content = this._serializeChatGPT(nodesTitle)
+                }
                 replyChatGPTOnMultiLine(content, lastSelectedNode)
               }
               trackAction({
