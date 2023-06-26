@@ -465,8 +465,7 @@ class KeyboardEvents {
                 const nonPromptChildNodes = [...childNodes]
                   .filter(n => !prompts?.includes(n.id))
                   .flatMap(n => indentedText(n))
-                const nodesTitle = [title, ...nonPromptChildNodes].join('\n')
-                const nodesContent = this._serializeChatGPT(nodesTitle)
+                const nodesContent = [content, ...nonPromptChildNodes].join('\n')
                 replyChatGPTOnMultiLine(nodesContent, lastSelectedNode)
               }
               trackAction({
