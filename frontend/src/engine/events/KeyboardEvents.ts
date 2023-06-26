@@ -455,19 +455,19 @@ class KeyboardEvents {
               nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
             })
             if (typeof title === 'string' && title.startsWith(CHATGPT_QUERY)) {
-              let content = this._serializeChatGPT(title)
+              const content = this._serializeChatGPT(title)
               if (title.endsWith(CHATGPT_SINGLE_LINE)) {
                 replyChatGPTOnSingleLine(content, lastSelectedNode)
               } else if (title.endsWith(CHATGPT_TABLE)) {
                 replyChatGPTOnTable(content, lastSelectedNode)
               } else {
-                const {prompts} = lastSelectedNode
-                if (prompts && prompts.length) {
-                  const childNodes = [...lastSelectedNode.childNodes].filter(n => !prompts?.includes(n.id))
-                  const nodesTitle = [lastSelectedNode, ...childNodes].map(n => n.title).join('\n')
-                  content = this._serializeChatGPT(nodesTitle)
-                }
-                replyChatGPTOnMultiLine(content, lastSelectedNode)
+                const {prompts, childNodes} = lastSelectedNode
+                const nonPromptChildNodes = [...childNodes]
+                  .filter(n => !prompts?.includes(n.id))
+                  .flatMap(n => indentedText(n))
+                const nodesTitle = [title, ...nonPromptChildNodes].join('\n')
+                const nodesContent = this._serializeChatGPT(nodesTitle)
+                replyChatGPTOnMultiLine(nodesContent, lastSelectedNode)
               }
               trackAction({
                 action: 'nodeAddPrompt',
