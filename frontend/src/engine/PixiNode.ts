@@ -993,6 +993,10 @@ class PixiNode extends AbstractPixiNode implements NodeData {
     this._dirty = value
   }
 
+  get prompts(): string[] | undefined {
+    return this.storeNode.prompts
+  }
+
   hasCheckBox() {
     return typeof this.checked === 'boolean'
   }
