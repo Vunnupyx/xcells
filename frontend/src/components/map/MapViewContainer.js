@@ -49,7 +49,6 @@ const useStyles = makeStyles(() => ({
     bottom: 0,
     padding: 0,
     margin: 0,
-    overflow: 'hidden',
   },
   mapDrawerOpen: {
     gridColumn: 1,
@@ -62,7 +61,6 @@ const useStyles = makeStyles(() => ({
     bottom: 0,
     padding: 0,
     margin: 0,
-    overflow: 'hidden',
   },
 }))
 
