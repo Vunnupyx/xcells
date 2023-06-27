@@ -583,9 +583,9 @@ export default {
   homePublicText: 'Public Maps',
   homePrivateText: 'My Maps',
 
-  callToRegisterTitle: 'Create your own xCell Sheets',
+  callToRegisterTitle: 'Start Your Own Maps',
   callToRegisterMessages:
-    'xCells allows you to organize, structure, and share information - in a new type of flexibly structured 3d paper. Explore the possibilities right now.',
+    'Knowledge management with Infinity Maps helps you organize, structure, and share your knowledge – in one deep knowledge map. Start your knowledge management with Infinity Maps now.',
 
   userPopoverAppMoreMaps: 'More Public Maps',
 

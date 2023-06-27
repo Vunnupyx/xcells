@@ -461,7 +461,12 @@ class KeyboardEvents {
               } else if (title.endsWith(CHATGPT_TABLE)) {
                 replyChatGPTOnTable(content, lastSelectedNode)
               } else {
-                replyChatGPTOnMultiLine(content, lastSelectedNode)
+                const {prompts, childNodes} = lastSelectedNode
+                const nonPromptChildNodes = [...childNodes]
+                  .filter(n => !prompts?.includes(n.id))
+                  .flatMap(n => indentedText(n))
+                const nodesContent = [content, ...nonPromptChildNodes].join('\n')
+                replyChatGPTOnMultiLine(nodesContent, lastSelectedNode)
               }
               trackAction({
                 action: 'nodeAddPrompt',

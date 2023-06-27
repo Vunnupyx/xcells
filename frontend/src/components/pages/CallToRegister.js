@@ -27,7 +27,7 @@ export const RegisterButton = () => {
 const CallToRegister = () => (
   <Box marginTop={4}>
     <Grid container justifyContent="center">
-      <Grid item container spacing={1} direction="column" component={Box} maxWidth={530}>
+      <Grid item container spacing={1} direction="column" component={Box} maxWidth={400}>
         <Grid item>
           <img alt="Infinity Maps content" style={imageStyle} src={infinityContent} />
         </Grid>
