@@ -21,6 +21,7 @@ const MAP_MIME_TYPE = 'application/json'
 const CHATGPT_QUERY = '/chatgpt'
 const CHATGPT_SINGLE_LINE = '--join'
 const CHATGPT_TABLE = '--table'
+const NARRATIVE_REGEX = '@([\\w-]+)'
 
 type FileTypes = 'image' | 'file'
 
@@ -101,6 +102,8 @@ class KeyboardEvents {
 
     const {isFocusedRenderEngine, isFocusedButton} = getFocus(document.activeElement || document.body)
     if (!isFocusedButton && !isFocusedRenderEngine) return
+
+    manager.sanitizeNode(node)
 
     log('copy', node)
     trackAction({action: 'nodeCopy', key: 'Ctrl+C', selected: manager.selectedNodes.size})
@@ -465,7 +468,8 @@ class KeyboardEvents {
                 const nonPromptChildNodes = [...childNodes]
                   .filter(n => !prompts?.includes(n.id))
                   .flatMap(n => indentedText(n))
-                const nodesContent = [content, ...nonPromptChildNodes].join('\n')
+                const nodesTitle = [content, ...nonPromptChildNodes].join('\n')
+                const nodesContent = this._serializeChatGPT(nodesTitle)
                 replyChatGPTOnMultiLine(nodesContent, lastSelectedNode)
               }
               trackAction({
@@ -600,7 +604,9 @@ class KeyboardEvents {
   }
 
   private _serializeChatGPT = (content: string): string => {
-    return content.replace(new RegExp(`${CHATGPT_QUERY}|${CHATGPT_SINGLE_LINE}|${CHATGPT_TABLE}`, 'g'), '').trim()
+    return content
+      .replace(new RegExp(`${CHATGPT_QUERY}|${CHATGPT_SINGLE_LINE}|${CHATGPT_TABLE}|${NARRATIVE_REGEX}`, 'g'), '')
+      .trim()
   }
 }
 

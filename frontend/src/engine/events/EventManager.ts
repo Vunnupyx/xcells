@@ -11,22 +11,22 @@ import CONFIG from '../CONFIG'
 import {
   add,
   addEdge,
+  addPrompt,
+  addTemplate,
+  edit,
+  editTable,
+  fromTemplate,
   move,
   remove,
+  removePrompts,
   rescale,
   resize,
+  setBorderColor,
+  setCheckBox,
+  setColor,
   setFile,
   setImage,
   setImagePosition,
-  setCheckBox,
-  fromTemplate,
-  addTemplate,
-  edit,
-  setColor,
-  setBorderColor,
-  addPrompt,
-  removePrompts,
-  editTable,
 } from '../../store/actions'
 import {generateEdgeId, generateNodeId} from '../../shared/utils/generateId'
 
@@ -56,6 +56,7 @@ import BoundedArray from '../../utils/BoundedArray'
 import createMoveSteps from '../utils/createMoveSteps'
 import {createChatCompletion} from '../utils/openAI'
 import {BlockLexer} from '../utils/marked/block-lexer'
+import getMentions from '../utils/getMentions'
 
 const log = debug('app:Event:EventManager')
 const logError = log.extend('ERROR*', '::')
@@ -1396,6 +1397,37 @@ class EventManager extends Publisher {
     }
 
     return this.addDispatch(addTemplate(node, template))
+  }
+
+  getCiteNode = (name: string): PixiNode | undefined => {
+    const {renderNodes} = this.engine
+
+    return Object.values(renderNodes).find(({title}) => {
+      if (title?.startsWith('@')) {
+        const citation = getMentions(title)
+        return citation.length > 1 && citation[1] === name
+      }
+      return false
+    })
+  }
+
+  sanitizeNode = async (node: PixiNode): Promise<void> => {
+    const {getCiteNode, addDispatch} = this
+    const {control} = this.engine
+    const {title} = node
+
+    if (title) {
+      const citation = getMentions(title, '@@')
+      if (citation.length > 1) {
+        const citeNode = getCiteNode(citation[1])
+        if (citeNode) {
+          const newNode = control.copyNode(citeNode)
+          const actions = control.pasteNode(newNode, [node])
+          await addDispatch(actions)
+          node.title = title.replace(citation[0], '').trim()
+        }
+      }
+    }
   }
 }
 
