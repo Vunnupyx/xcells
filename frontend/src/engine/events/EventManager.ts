@@ -1412,7 +1412,7 @@ class EventManager extends Publisher {
   }
 
   sanitizeNode = async (node: PixiNode): Promise<void> => {
-    const {getCiteNode, addDispatch} = this
+    const {getCiteNode, addDispatch, createChild} = this
     const {control} = this.engine
     const {title} = node
 
@@ -1423,8 +1423,21 @@ class EventManager extends Publisher {
         if (citeNode) {
           const newNode = control.copyNode(citeNode)
           const actions = control.pasteNode(newNode, [node])
+
+          const matchIndex = title.indexOf(citation[0])
+          const beforeCitation = title.slice(0, matchIndex)
+          const afterCitation = title.slice(matchIndex + citation[0].length)
+          node.title = beforeCitation
+
+          if (afterCitation) {
+            const nodeData = {
+              title: afterCitation,
+            }
+            createChild(node, nodeData)
+          }
+
+          actions.push(edit(node))
           await addDispatch(actions)
-          node.title = title.replace(citation[0], '').trim()
         }
       }
     }
