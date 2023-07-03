@@ -13,15 +13,12 @@ import {api} from '../../hooks/useApi'
 import type PixiNode from '../PixiNode'
 import type CommonTextField from '../elements/CommonTextField'
 import {track} from '../../contexts/tracking'
+import {CHATGPT_QUERY, CHATGPT_SINGLE_LINE, CHATGPT_TABLE, serializeChatGPT} from '../utils/openAI'
 
 const log = debug('app:Event:Keyboard')
 const logError = log.extend('ERROR*', '::')
 
 const MAP_MIME_TYPE = 'application/json'
-const CHATGPT_QUERY = '/chatgpt'
-const CHATGPT_SINGLE_LINE = '--join'
-const CHATGPT_TABLE = '--table'
-const NARRATIVE_REGEX = '@([\\w-]+)'
 
 type FileTypes = 'image' | 'file'
 
@@ -103,14 +100,15 @@ class KeyboardEvents {
     const {isFocusedRenderEngine, isFocusedButton} = getFocus(document.activeElement || document.body)
     if (!isFocusedButton && !isFocusedRenderEngine) return
 
-    manager.sanitizeNode(node)
-
     log('copy', node)
     trackAction({action: 'nodeCopy', key: 'Ctrl+C', selected: manager.selectedNodes.size})
 
     const selectedSiblings = [...node.parentNode.childNodes].filter(n => n.state.isSelected)
 
-    event.clipboardData?.setData('text/plain', selectedSiblings.flatMap(n => indentedText(n)).join('\n'))
+    event.clipboardData?.setData(
+      'text/plain',
+      manager.sanitizeTitle(selectedSiblings.flatMap(n => indentedText(n)).join('\n')),
+    )
     event.clipboardData?.setData('application/json', JSON.stringify(selectedSiblings.map(n => control.copyNode(n))))
     event.preventDefault()
     event.stopPropagation()
@@ -301,6 +299,7 @@ class KeyboardEvents {
       replyChatGPTOnSingleLine,
       replyChatGPTOnMultiLine,
       replyChatGPTOnTable,
+      sanitizeTitle,
       createChildAndSelect,
       scaleUp,
       scaleDown,
@@ -458,18 +457,19 @@ class KeyboardEvents {
               nestingParents: numberOfNestingParents(lastSelectedNode) - 1,
             })
             if (typeof title === 'string' && title.startsWith(CHATGPT_QUERY)) {
-              const content = this._serializeChatGPT(title)
+              const content = serializeChatGPT(title)
               if (title.endsWith(CHATGPT_SINGLE_LINE)) {
                 replyChatGPTOnSingleLine(content, lastSelectedNode)
               } else if (title.endsWith(CHATGPT_TABLE)) {
                 replyChatGPTOnTable(content, lastSelectedNode)
               } else {
+                const sanitizedTitle = sanitizeTitle(title)
                 const {prompts, childNodes} = lastSelectedNode
                 const nonPromptChildNodes = [...childNodes]
                   .filter(n => !prompts?.includes(n.id))
                   .flatMap(n => indentedText(n))
-                const nodesTitle = [content, ...nonPromptChildNodes].join('\n')
-                const nodesContent = this._serializeChatGPT(nodesTitle)
+                const nodesTitle = [sanitizedTitle, ...nonPromptChildNodes].join('\n')
+                const nodesContent = serializeChatGPT(nodesTitle)
                 replyChatGPTOnMultiLine(nodesContent, lastSelectedNode)
               }
               trackAction({
@@ -601,12 +601,6 @@ class KeyboardEvents {
     }
 
     if (document.activeElement !== document.body && isDownHandled[keyCode]) event.stopPropagation()
-  }
-
-  private _serializeChatGPT = (content: string): string => {
-    return content
-      .replace(new RegExp(`${CHATGPT_QUERY}|${CHATGPT_SINGLE_LINE}|${CHATGPT_TABLE}|${NARRATIVE_REGEX}`, 'g'), '')
-      .trim()
   }
 }
 

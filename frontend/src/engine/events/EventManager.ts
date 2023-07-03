@@ -54,9 +54,10 @@ import onGrid from '../utils/onGrid'
 import ImportHandler from '../import/ImportHandler'
 import BoundedArray from '../../utils/BoundedArray'
 import createMoveSteps from '../utils/createMoveSteps'
-import {createChatCompletion} from '../utils/openAI'
+import {createChatCompletion, serializeChatGPT} from '../utils/openAI'
 import {BlockLexer} from '../utils/marked/block-lexer'
 import getMentions from '../utils/getMentions'
+import indentedText from '../utils/renderer/indentedText'
 
 const log = debug('app:Event:EventManager')
 const logError = log.extend('ERROR*', '::')
@@ -1411,36 +1412,18 @@ class EventManager extends Publisher {
     })
   }
 
-  sanitizeNode = async (node: PixiNode): Promise<void> => {
-    const {getCiteNode, addDispatch, createChild} = this
-    const {control} = this.engine
-    const {title} = node
+  sanitizeTitle = (title: string): string => {
+    const {getCiteNode} = this
+    const citation = getMentions(title, '@@')
 
-    if (title) {
-      const citation = getMentions(title, '@@')
-      if (citation.length > 1) {
-        const citeNode = getCiteNode(citation[1])
-        if (citeNode) {
-          const newNode = control.copyNode(citeNode)
-          const actions = control.pasteNode(newNode, [node])
-
-          const matchIndex = title.indexOf(citation[0])
-          const beforeCitation = title.slice(0, matchIndex)
-          const afterCitation = title.slice(matchIndex + citation[0].length)
-          node.title = beforeCitation
-
-          if (afterCitation) {
-            const nodeData = {
-              title: afterCitation,
-            }
-            createChild(node, nodeData)
-          }
-
-          actions.push(edit(node))
-          await addDispatch(actions)
-        }
+    if (citation.length > 1) {
+      const citeNode = getCiteNode(citation[1])
+      if (citeNode) {
+        const replacementCitation = serializeChatGPT(indentedText(citeNode).join('\n'))
+        return title.replace(new RegExp(`${citation[0]} ?`, 'g'), `\n${replacementCitation}\n`).trim()
       }
     }
+    return title
   }
 }
 
