@@ -4,7 +4,7 @@ import {ChatCompletionRequestMessage} from 'openai/api'
 export const CHATGPT_QUERY = '/chatgpt'
 export const CHATGPT_SINGLE_LINE = '--join'
 export const CHATGPT_TABLE = '--table'
-export const NARRATIVE_REGEX = '@([\\w-]+)'
+export const NARRATIVE_REGEX = '@+([\\w-]+)'
 
 export const serializeChatGPT = (content: string): string => {
   return content

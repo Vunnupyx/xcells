@@ -1420,7 +1420,10 @@ class EventManager extends Publisher {
       const citeNode = getCiteNode(citation[1])
       if (citeNode) {
         const replacementCitation = serializeChatGPT(indentedText(citeNode).join('\n'))
-        return title.replace(new RegExp(`${citation[0]} ?`, 'g'), `\n${replacementCitation}\n`).trim()
+        const matchIndex = title.indexOf(citation[0])
+        const beforeCitation = title.slice(0, matchIndex).trimEnd()
+        const afterCitation = title.slice(matchIndex + citation[0].length).trimStart()
+        return [beforeCitation, replacementCitation, this.sanitizeTitle(afterCitation)].join('\n').trim()
       }
     }
     return title
