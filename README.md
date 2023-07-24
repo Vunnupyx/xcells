@@ -3,6 +3,9 @@
 
 Project is based on a nodejs backend and a reactjs/pixijs frontend.
 
+![Jul-20-2023](https://github.com/Vunnupyx/xcells/assets/53125611/8bb1d7a2-953c-4969-9677-53e45513f6ba)
+
+
 ## backend
 
 The backend is an async implementation with the koa web framework[1]. It uses
@@ -14,39 +17,26 @@ The map store uses the same technology as the frontend: automerge[3].
 The frontend was initialized with create-react-app[4]. It uses react[5] hooks for forms,
 menus etc. The render engine is based on pixijs[6] and uses pixi-viewport[7].
 
-## communication architecture
-
-TODO
-
-## render engine architecture
-
-TODO
-
 # setup
 
 ## install
 
-1. Go to your gitlab profile page, create a "Deploy Token". Save the user and the password.
-
-2. git clone https://gitlab.awesome-it.de/imaps/imaps.git into a local directory, for
-example `~/src/infinity`
-
-3. run the backend:
-    * `cd ~/src/infinity/backend`
+1. run the backend:
+    * `cd backend`
     * `nvm use` (If you use nvm, install the correct version of Node.js, defined in .nvmrc)
     * `npm install`
     * `npm run dev`
 
-4. run the frontend:
-    * `cd ~/src/infinity/frontend`
+2. run the frontend:
+    * `cd frontend`
     * `nvm use` (If you use nvm, install the correct version of Node.js, defined in .nvmrc)
     * `npm install`
     * `npm run start`
 
-5. add a local user:
-    * `cd ~/src/infinity/backend`
-    * `npx babel-node src/scripts/createUser.js dev dev@example.com dev subscriber`
-    * `npx babel-node src/scripts/createUser.js admin admin@example.com admin subscriber,administrator`
+3. add a local user:
+    * `cd backend`
+    * `npx babel-node src/scripts/createUser.js dev dev@example.com dev subscriber true`
+    * `npx babel-node src/scripts/createUser.js admin admin@example.com admin subscriber,administrator true`
 
 Both webservers should restart automatically, whenever you change a file. In
 the dev setup, all request should go to the frontend. It will automatically
